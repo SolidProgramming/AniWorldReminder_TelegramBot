@@ -1,0 +1,10 @@
+﻿namespace AniWorldReminder_TelegramBot.Models.DB
+{
+    public class SeriesModel
+    {
+        public int Id { get; set; }
+        public string? Name { get; set; }
+        public string? CoverArtUrl { get; set; }
+        public string? StreamingPortal { get; set; }
+    }
+}
