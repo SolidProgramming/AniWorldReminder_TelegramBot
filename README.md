@@ -75,3 +75,45 @@ builder.Services.AddSingleton<IStreamingPortalServiceFactory>(_ =>
 });
 ```
 
+## Add a Quartz Job
+### Add a Job class in Classes and add the required Services via Dependency Injection(DI).
+```
+using MethodTimer;
+using Quartz;
+using System.Reflection;
+using System.Text;
+
+namespace AniWorldReminder_TelegramBot.Classes
+{
+    [DisallowConcurrentExecution]
+    public class MyNewHosterJob : IJob
+    {
+        private readonly ILogger<MyNewHosterJob> Logger;
+        private readonly IStreamingPortalService MyNewHosterService;
+        private readonly IDBService DBService;
+        private readonly ITelegramBotService TelegramBotService;
+
+        public MyNewHosterJob(ILogger<MyNewHosterJob> logger,
+            IStreamingPortalServiceFactory streamingPortalServiceFactory,
+            IDBService dbService,
+            ITelegramBotService telegramBotService)
+        {
+            Logger = logger;
+            MyNewHosterService = streamingPortalServiceFactory.GetService(StreamingPortal.MyNewHoster);
+            DBService = dbService;
+            TelegramBotService = telegramBotService;
+        }
+
+        [Time]
+        public async Task Execute(IJobExecutionContext context)
+        {
+            MethodBase? methodBase = typeof(MyNewHosterJob).GetMethod("Execute");
+            MethodTimeLogger.LogExecution(methodBase);
+
+            // ... Check for new Episodes
+        }
+
+  }
+}
+
+```
