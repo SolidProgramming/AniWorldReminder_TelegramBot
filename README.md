@@ -4,6 +4,32 @@ ASP.NET Backend to host a Telegram Bot that reminds you when a new Episode of a 
 
 # Getting started
 
+## Prerequisites
+### Settings and Proxy
+Get the Telegram Bot Token from [@BotFather](https://t.me/BotFather).
+You need to get a Proxy if you don't want to get Captcha blocked. [Webshare](https://webshare.io)
+```
+{
+  "TelegramBot": {
+    "Token": "MYTOKEN"
+  },
+  "Database": {
+    "IP": "XXX.XXX.XXX.XXX",
+    "Database": "aniworldreminder",
+    "Username": "aniworldreminder_user",
+    "Password": "bu4usoneVoli"
+  },
+  "Proxy": {
+    "URI": "https://myproxy",
+    "Username": "username",
+    "Password": "password"
+  }
+}
+
+```
+
+### Database
+Create the Database. Sql query download: [SQL](https://reducemy.link/p/4WRCDq)
 
 ## Add a new Hoster
 
