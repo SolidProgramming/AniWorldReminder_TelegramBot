@@ -19,7 +19,7 @@ ASP.NET Backend to host a Telegram Bot that reminds you when a new Episode of a 
 ```
 public class MyNewHosterService : IStreamingPortalService
 {
-    private readonly ILogger<AniWorldSTOService> Logger;
+    private readonly ILogger<MyNewHosterService> Logger;
     private readonly Interfaces.IHttpClientFactory HttpClientFactory;
     private HttpClient? HttpClient;
 
