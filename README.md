@@ -77,7 +77,7 @@ builder.Services.AddSingleton<IStreamingPortalServiceFactory>(_ =>
 
 ## Add a Quartz Job
 ### Add a Job class in Classes and add the required Services via Dependency Injection(DI).
-```
+```C#
 using MethodTimer;
 using Quartz;
 using System.Reflection;
@@ -115,5 +115,13 @@ namespace AniWorldReminder_TelegramBot.Classes
 
   }
 }
+```
 
+## Add Quartz Job and Trigger to Program.cs. The Number represents the interval for the Job to be executed.
+```C#
+builder.Services.AddQuartz(_ =>
+{
+    _.AddJobAndTrigger<AniWorldSTOJob>(60);
+    _.AddJobAndTrigger<MyNewHosterJob>(60); //Here.
+});
 ```
