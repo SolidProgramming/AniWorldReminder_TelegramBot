@@ -16,8 +16,8 @@ You need to get a Proxy if you don't want to get Captcha blocked. [Webshare](htt
   "Database": {
     "IP": "XXX.XXX.XXX.XXX",
     "Database": "aniworldreminder",
-    "Username": "aniworldreminder_user",
-    "Password": "bu4usoneVoli"
+    "Username": "user",
+    "Password": "myPassword"
   },
   "Proxy": {
     "URI": "https://myproxy",
