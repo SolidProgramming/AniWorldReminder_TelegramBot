@@ -6,6 +6,7 @@ ASP.NET Backend to host a Telegram Bot that reminds you when a new Episode of a 
 
 ## Prerequisites
 ### Settings and Proxy
+The settings.json File need to be located under the root directory. For Docker under '/app/appdata/settings.json'
 Get the Telegram Bot Token from [@BotFather](https://t.me/BotFather).
 You need to get a Proxy if you don't want to get Captcha blocked. [Webshare](https://webshare.io)
 ```
