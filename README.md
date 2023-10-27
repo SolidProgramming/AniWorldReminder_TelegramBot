@@ -15,7 +15,31 @@ ASP.NET Backend to host a Telegram Bot that reminds you when a new Episode of a 
  }
 ```
 
-### Add Service instanze of Hoster to the StreamingPortalServiceFactory in StreamingPortalServiceFactory.cs
+### Add new Service that implements IStreamingPortalService
+```
+public class AniWorldSTOService : IStreamingPortalService
+{
+    private readonly ILogger<AniWorldSTOService> Logger;
+    private readonly Interfaces.IHttpClientFactory HttpClientFactory;
+    private HttpClient? HttpClient;
+
+    public string BaseUrl { get; init; }
+    public string Name { get; init; }
+
+    public AniWorldSTOService(ILogger<MyNewHosterService> logger, Interfaces.IHttpClientFactory httpClientFactory, string baseUrl, string name)
+    {
+        BaseUrl = baseUrl;
+        Name = name;
+
+        HttpClientFactory = httpClientFactory;
+
+        Logger = logger;
+    }
+}
+//... implement the missing Methods required by IStreamingPortalService
+```
+
+### Add Service instance of Hoster to the StreamingPortalServiceFactory in StreamingPortalServiceFactory.cs
 ```
 private static IStreamingPortalService CreateService(StreamingPortal streamingPortal, IServiceProvider sp)
 {
