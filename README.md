@@ -117,7 +117,7 @@ namespace AniWorldReminder_TelegramBot.Classes
 }
 ```
 
-## Add Quartz Job and Trigger to Program.cs. The Number represents the interval for the Job to be executed.
+### Add Quartz Job and Trigger to Program.cs. The Number represents the interval for the Job to be executed.
 ```C#
 builder.Services.AddQuartz(_ =>
 {
