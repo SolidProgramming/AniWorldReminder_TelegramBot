@@ -5,7 +5,7 @@ ASP.NET Backend to host a Telegram Bot that reminds you when a new Episode of a 
 ## Add a new Hoster
 
 ### Add a Hoster to Enums.StreamingPortal
-```
+```C#
  public enum StreamingPortal
  {
      Undefined = 0,
@@ -16,7 +16,7 @@ ASP.NET Backend to host a Telegram Bot that reminds you when a new Episode of a 
 ```
 
 ### Add new Service that implements IStreamingPortalService
-```
+```C#
 public class MyNewHosterService : IStreamingPortalService
 {
     private readonly ILogger<MyNewHosterService> Logger;
@@ -40,7 +40,7 @@ public class MyNewHosterService : IStreamingPortalService
 ```
 
 ### Add Service instance of Hoster to the StreamingPortalServiceFactory in StreamingPortalServiceFactory.cs
-```
+```C#
 private static IStreamingPortalService CreateService(StreamingPortal streamingPortal, IServiceProvider sp)
 {
     Interfaces.IHttpClientFactory httpClientFactory = sp.GetRequiredService<Interfaces.IHttpClientFactory>();
@@ -63,7 +63,7 @@ private static IStreamingPortalService CreateService(StreamingPortal streamingPo
 ```
 
 ### Add the Hoster Service to the StreamingPortalServiceFactory for the Dependency Injection(DI) in Program.cs.
-```
+```C#
 builder.Services.AddSingleton<IStreamingPortalServiceFactory>(_ =>
 {
     StreamingPortalServiceFactory streamingPortalServiceFactory = new();
