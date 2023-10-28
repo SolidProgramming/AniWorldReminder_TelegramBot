@@ -22,7 +22,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\RegexSchemaLib\RegexSchemaLib\RegexSchemaLib.csproj" />
+    <Folder Include="Binaries\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="RegexSchemaLib">
+      <HintPath>Binaries\RegexSchemaLib.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>
