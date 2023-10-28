@@ -17,11 +17,18 @@ namespace AniWorldReminder_TelegramBot.Misc
              {
                 "reminders",
                 ChatCommand.Reminders
+            },
+             {
+                "verify",
+                ChatCommand.Verify
             }
         };
 
         public static ChatCommand GetChatCommandByName(string commandName)
         {
+            if (commandName is null)
+                return ChatCommand.Undefined;
+
             return ChatCommands.SingleOrDefault(_ => _.Key == commandName.ToLower()).Value;
         }
 

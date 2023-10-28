@@ -1,5 +1,7 @@
 ﻿using AniWorldReminder_TelegramBot.Enums;
+using MySqlX.XDevAPI.Common;
 using Quartz;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
 
@@ -12,7 +14,12 @@ namespace AniWorldReminder_TelegramBot.Misc
             command = null;
             parameter = null;
 
-            Regex regex = new("(?i:/(.*?)\\s(?'Parameter'.+?)$)|(?i:/reminders)");
+            string? regexPattern = RegexBuilder.BuildChatCommandPattern();
+
+            if (string.IsNullOrEmpty(regexPattern))
+                return false;
+
+            Regex regex = new(regexPattern);
 
             Match match = regex.Match(text);
 
@@ -21,37 +28,14 @@ namespace AniWorldReminder_TelegramBot.Misc
             if (!isMatch)
                 return false;
 
-            GroupCollection groups = regex.Match(text).Groups;
+            List<Group>? groupList = match.Groups.ToList(removeEmptyGroups: true);
 
-            if (match.Value.TrimStart('/').ToChatCommand() == ChatCommand.Reminders)
-            {
-                command = ChatCommand.Reminders;
-                return true;
-            }
-
-            parameter = groups.Count > 1 ? match.Groups["Parameter"].Value : "";
-
-            if (string.IsNullOrEmpty(parameter))
+            if(!groupList.HasItems())
                 return false;
 
-            string commandName = "";
+            command = match.Groups["COMMAND"].Value.ToChatCommand();
 
-            if (!string.IsNullOrEmpty(groups[1].Value))
-            {
-                commandName = groups[1].Value.ToLower();
-            }
-
-            if (string.IsNullOrEmpty(commandName))
-            {
-                return false;
-            }
-
-            command = ChatCommandHelper.GetChatCommandByName(commandName);
-
-            if (command is null)
-            {
-                return false;
-            }
+            parameter = match.Groups["PARAM"].Value;
 
             return true;
         }
@@ -136,6 +120,25 @@ namespace AniWorldReminder_TelegramBot.Misc
             string result = await httpClient.GetStringAsync("https://api.ipify.org/");
 
             return (!string.IsNullOrEmpty(result), result);
+        }
+        public static string Concat(this IEnumerable<string> list, char delimeter, bool removeLastChar = true)
+        {
+            return string.Join(delimeter, list);
+        }
+        public static List<Group>? ToList(this GroupCollection groupCollection, bool removeEmptyGroups = true)
+        {
+            List<Group> result = new();
+
+            if (!groupCollection.HasItems<Group>())
+                return null;
+
+            result = groupCollection.Cast<Group>().ToList();
+
+            if (removeEmptyGroups)
+                result = result.Where(_ => !string.IsNullOrEmpty(_.Value)).ToList();
+
+
+            return result;
         }
     }
 }

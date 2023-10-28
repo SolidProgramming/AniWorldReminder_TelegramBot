@@ -21,4 +21,8 @@
     <PackageReference Include="Telegram.Bot" Version="19.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\RegexSchemaLib\RegexSchemaLib\RegexSchemaLib.csproj" />
+  </ItemGroup>
+
 </Project>

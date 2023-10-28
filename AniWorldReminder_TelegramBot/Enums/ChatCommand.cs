@@ -2,8 +2,10 @@
 {
     public enum ChatCommand
     {
+        Undefined,
         Remind,
         RemRemind,
-        Reminders
+        Reminders,
+        Verify
     }
 }
