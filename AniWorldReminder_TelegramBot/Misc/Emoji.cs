@@ -16,5 +16,6 @@
         public const string ArrowRight = "➡";
         public const string HeavyMinus = "➖";
         public const string SmallBlackSquare = "▪";
+        public const string AlarmClock = "⏰";
     }
 }

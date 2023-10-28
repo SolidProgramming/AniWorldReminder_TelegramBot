@@ -6,8 +6,8 @@ namespace AniWorldReminder_TelegramBot.Interfaces
     public interface IDBService
     {
         Task<bool> Init();
-        Task<DBModels.UsersModel> GetUserAsync(string telegramChatId);
-        Task InsertUserAsync(string telegramChatId);
+        Task<DBModels.UsersModel?> GetUserAsync(string telegramChatId);
+        Task<DBModels.UsersModel> InsertUserAsync(string telegramChatId);
         Task<DBModels.SeriesModel> GetSeriesAsync(string seriesName);
         Task<int> InsertSeriesAsync(AniWorldModels.SeriesInfoModel series, StreamingPortal streamingPortal);
         Task<DBModels.UsersSeriesModel?> GetUsersSeriesAsync(string telegramChatId, string seriesName);
@@ -23,5 +23,6 @@ namespace AniWorldReminder_TelegramBot.Interfaces
         Task<List<EpisodeModel>?> GetSeriesEpisodesAsync(int seriesId);
         Task<UserState> GetUserStateAsync(string telegramChatId);
         Task UpdateUserState(string telegramChatId, UserState userState);
+        Task UpdateVerifyToken(string telegramChatId, string token);
     }
 }

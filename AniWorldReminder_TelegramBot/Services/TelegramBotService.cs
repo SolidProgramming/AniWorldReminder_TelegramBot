@@ -120,6 +120,9 @@ namespace AniWorldReminder_TelegramBot.Services
                     case ChatCommand.Reminders:
                         await HandleReminders(message);
                         break;
+                    case ChatCommand.Verify:
+                        await HandleVerify(message);
+                        break;
                     default:
                         break;
                 }
@@ -343,6 +346,46 @@ namespace AniWorldReminder_TelegramBot.Services
             await SendMessageAsync(message.Chat.Id, sb.ToString());
         }
 
+        private async Task HandleVerify(Message message)
+        {
+            string telegramChatId = message.Chat.Id.ToString();
+
+            UsersModel? user = await DBService.GetUserAsync(telegramChatId);
+
+            user ??= await DBService.InsertUserAsync(telegramChatId);
+
+            string messageText;
+
+            if (user.Verified == VerificationStatus.Verified)
+            {
+                messageText = $"{Emoji.ExclamationmarkRed} <b>Du bist schon verifiziert!</b> {Emoji.ExclamationmarkRed}";
+                await SendMessageAsync(message.Chat.Id, messageText);
+                return;
+            }
+
+            string? token = Helper.GenerateToken(user);
+            TokenValidationModel tokenValidation = Helper.ValidateToken(user, token);
+
+            if (string.IsNullOrEmpty(token) || !tokenValidation.Validated)
+            {
+                messageText = $"{Emoji.ExclamationmarkRed} <b>Verifikations Code konnte nicht erstellt werden!</b> {Emoji.ExclamationmarkRed}";
+                await SendMessageAsync(message.Chat.Id, messageText);
+                return;
+            }
+
+            await DBService.UpdateVerifyToken(telegramChatId, token);  
+
+            StringBuilder sb = new();
+
+            sb.AppendLine($"{Emoji.Confetti} <b>Deine Daten zum Verifikationsprozesses:</b> {Emoji.Confetti}\n");
+            sb.AppendLine($"{Emoji.Checkmark} Telegram Chat Id: <b>{telegramChatId}</b>\n");
+            sb.AppendLine($"{Emoji.Checkmark} Token: <b>{token}</b>\n");
+            sb.AppendLine($"{Emoji.AlarmClock} Token ist gültig bis: <b>{tokenValidation.ExpireDate}</b>\n\n");
+            sb.AppendLine($"{Emoji.ExclamationmarkRed} <b>Bitte gebe diese Daten auf der Webseite um den Verifikationsprozess abzuschließen</b> {Emoji.ExclamationmarkRed}\n");
+
+            await SendMessageAsync(message.Chat.Id, sb.ToString());
+        }
+
         private async Task SendSearchResult(Message message, List<SearchResultModel> searchResults)
         {
             string answerText = $"{Emoji.ExclamationmarkRed} Da die Suche mehr als einen Treffer enthielt, wähle bitte einen der angezeigten Animes aus.\n" +
@@ -411,6 +454,6 @@ namespace AniWorldReminder_TelegramBot.Services
           new InputFileUrl(photoUrl),
                 caption: text,
                 parseMode: parseMode);
-        }
+        }                
     }
 }

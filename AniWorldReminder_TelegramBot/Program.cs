@@ -3,7 +3,6 @@ global using AniWorldReminder_TelegramBot.Classes;
 global using AniWorldReminder_TelegramBot.Models;
 global using AniWorldReminder_TelegramBot.Misc;
 global using AniWorldReminder_TelegramBot.Enums;
-global using RegexSchemaLib;
 global using Emoji = AniWorldReminder_TelegramBot.Misc.Emoji;
 global using MethodTimer;
 using AniWorldReminder_TelegramBot.Services;
@@ -33,12 +32,12 @@ namespace AniWorldReminder_TelegramBot
                 return streamingPortalServiceFactory;
             });
 
-            builder.Services.AddQuartz(_ =>
-            {
-                _.AddJobAndTrigger<AniWorldSTOJob>(60);
-            });
+            //builder.Services.AddQuartz(_ =>
+            //{
+            //    _.AddJobAndTrigger<AniWorldSTOJob>(60);
+            //});
 
-            builder.Services.AddQuartzHostedService(_ => _.WaitForJobsToComplete = true);
+            //builder.Services.AddQuartzHostedService(_ => _.WaitForJobsToComplete = true);
 
             WebApplication? app = builder.Build();
             MethodTimeLogger.Logger = app.Logger;
