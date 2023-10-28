@@ -214,6 +214,8 @@ namespace AniWorldReminder_TelegramBot.Services
             if (searchResultsSTO.HasItems())
                 allSearchResults.AddRange(searchResultsSTO);
 
+            allSearchResults = allSearchResults.DistinctBy(_ => _.Title).ToList();
+
             if (allSearchResults.Count > 1)
             {
                 await DBService.UpdateUserState(telegramChatId, UserState.KeyboardAnswer);
