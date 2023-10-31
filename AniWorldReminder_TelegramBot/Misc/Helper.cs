@@ -14,10 +14,10 @@ namespace AniWorldReminder_TelegramBot.Misc
             byte[] _time = data.Take(8).ToArray();
             byte[] _key = data.Skip(8).Take(9).ToArray();            
             byte[] _Id = data.Skip(17).ToArray();
-            
-            DateTime creationTime = DateTime.FromBinary(BitConverter.ToInt64(_time, 0));
-            result.ExpireDate = creationTime.AddHours(3);
-            if (DateTime.Now > result.ExpireDate)
+
+            DateTime when = DateTime.FromBinary(BitConverter.ToInt64(_time, 0));
+            result.ExpireDate = when;
+            if (when < DateTime.Now)
             {
                 result.Errors.Add(TokenValidationStatus.Expired);
             }
@@ -36,7 +36,7 @@ namespace AniWorldReminder_TelegramBot.Misc
         }
         public static string GenerateToken(UsersModel user)
         {
-            byte[] _time = BitConverter.GetBytes(DateTime.Now.ToBinary());
+            byte[] _time = BitConverter.GetBytes(DateTime.Now.AddMinutes(10).ToBinary());
             byte[] _key = GetBytes(user.TelegramChatId);
             byte[] _Id = GetBytes(user.Id.ToString());
             byte[] data = new byte[_time.Length + _key.Length + _Id.Length];

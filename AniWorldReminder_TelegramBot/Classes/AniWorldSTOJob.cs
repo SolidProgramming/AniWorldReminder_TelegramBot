@@ -34,7 +34,7 @@ namespace AniWorldReminder_TelegramBot.Classes
         [Time]
         public async Task Execute(IJobExecutionContext context)
         {
-            MethodBase? methodBase = typeof(AniWorldSTOJob).GetMethod("Execute");
+            MethodBase? methodBase = typeof(AniWorldSTOJob).GetMethod(nameof(Execute));
             MethodTimeLogger.LogExecution(methodBase);
 
             await CheckForNewEpisodes();
