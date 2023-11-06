@@ -22,7 +22,8 @@ namespace AniWorldReminder_TelegramBot.Interfaces
         Task InsertEpisodesAsync(int seriesId, List<EpisodeModel> episodes);
         Task<List<EpisodeModel>?> GetSeriesEpisodesAsync(int seriesId);
         Task<UserState> GetUserStateAsync(string telegramChatId);
-        Task UpdateUserState(string telegramChatId, UserState userState);
-        Task UpdateVerifyToken(string telegramChatId, string token);
+        Task UpdateUserStateAsync(string telegramChatId, UserState userState);
+        Task UpdateVerifyTokenAsync(string telegramChatId, string token);
+        Task InsertDownloadAsync(int seriesId, List<EpisodeModel> episodes);
     }
 }

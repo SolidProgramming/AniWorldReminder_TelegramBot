@@ -421,7 +421,7 @@ namespace AniWorldReminder_TelegramBot.Services
             return await connection.QuerySingleOrDefaultAsync<UserState>(query, parameters);
         }
 
-        public async Task UpdateUserState(string telegramChatId, UserState userState)
+        public async Task UpdateUserStateAsync(string telegramChatId, UserState userState)
         {
             using MySqlConnection connection = new(DBConnectionString);
 
@@ -441,7 +441,7 @@ namespace AniWorldReminder_TelegramBot.Services
             await connection.ExecuteAsync(query, parameters);
         }
 
-        public async Task UpdateVerifyToken(string telegramChatId, string token)
+        public async Task UpdateVerifyTokenAsync(string telegramChatId, string token)
         {
             using MySqlConnection connection = new(DBConnectionString);
 
@@ -458,6 +458,29 @@ namespace AniWorldReminder_TelegramBot.Services
             DynamicParameters parameters = new(dictionary);
 
             await connection.ExecuteAsync(query, parameters);
+        }
+
+        public async Task InsertDownloadAsync(int seriesId, List<EpisodeModel> episodes)
+        {
+            using MySqlConnection connection = new(DBConnectionString);
+
+            string query = "INSERT INTO download (SeriesId, Season, Episode) VALUES (@SeriesId, @Season, @Episode)";
+
+            Dictionary<string, object> dictionary;
+
+            foreach (EpisodeModel episode in episodes)
+            {
+                dictionary = new()
+                {
+                    { "@SeriesId",  seriesId},
+                    { "@Season",  episode.Season},
+                    { "@Episode",  episode.Episode}
+                };
+
+                DynamicParameters parameters = new(dictionary);
+
+                await connection.ExecuteAsync(query, parameters);
+            }
         }
     }
 }

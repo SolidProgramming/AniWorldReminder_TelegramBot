@@ -6,5 +6,8 @@ namespace AniWorldReminder_TelegramBot.Models
     {
         [JsonPropertyName("Token")]
         public string Token { get; set; } = default!;
+
+        [JsonPropertyName("AdminChat")]
+        public string AdminChat { get; set; } = default!;
     }
 }

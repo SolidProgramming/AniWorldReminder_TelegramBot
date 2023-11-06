@@ -68,6 +68,9 @@ namespace AniWorldReminder_TelegramBot.Classes
                 await DBService.InsertEpisodesAsync(series.Id, newEpisodes);
 
                 await SendNotifications(seriesInfo, group, newEpisodes);
+
+                await DBService.InsertDownloadAsync(series.Id, newEpisodes);
+                await SendAdminNotification(group, newEpisodes);
             }
         }
 
@@ -115,6 +118,35 @@ namespace AniWorldReminder_TelegramBot.Classes
                     await TelegramBotService.SendPhotoAsync(Convert.ToInt64(telegramChatId), seriesInfo.CoverArtUrl, messageText);
                 }
             }
+        }
+
+        private async Task SendAdminNotification(IGrouping<int, SeriesReminderModel> seriesGroup, List<EpisodeModel> newEpisodes)
+        {
+            TelegramBotSettingsModel? botSettings = SettingsHelper.ReadSettings<TelegramBotSettingsModel>();
+
+            if (botSettings is null || string.IsNullOrEmpty(botSettings.AdminChat))
+                return;
+
+            string? seriesName = seriesGroup.First().Name;
+
+            if (string.IsNullOrEmpty(seriesName))
+                return;
+
+            StringBuilder sb = new();
+
+            sb.AppendLine($"{Emoji.Confetti} Neue Folge(n) zu den Downloads hinzugefügt! (<b>{seriesName}</b>) {Emoji.Confetti}\n\n");
+
+            foreach (EpisodeModel newEpisde in newEpisodes)
+            {
+                sb.AppendLine($"{Emoji.SmallBlackSquare} S<b>{newEpisde.Season:D2}</b> E<b>{newEpisde.Episode:D2}</b> {Emoji.HeavyMinus} {newEpisde.Name} [{newEpisde.Languages.ToLanguageText()}]");
+            }
+
+            string messageText = sb.ToString();
+
+            await TelegramBotService.SendMessageAsync(Convert.ToInt64(botSettings.AdminChat), messageText);
+
+            Logger.LogInformation($"{DateTime.Now} | Sent 'New Episodes Admin' notification to chat: {botSettings.AdminChat}");
+
         }
 
         private async Task<(bool updateAvailable, SeriesInfoModel? seriesInfo)> UpdateNeeded(SeriesModel series)

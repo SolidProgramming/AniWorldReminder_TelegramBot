@@ -218,7 +218,7 @@ namespace AniWorldReminder_TelegramBot.Services
 
             if (allSearchResults.Count > 1)
             {
-                await DBService.UpdateUserState(telegramChatId, UserState.KeyboardAnswer);
+                await DBService.UpdateUserStateAsync(telegramChatId, UserState.KeyboardAnswer);
                 await SendSearchResult(message, allSearchResults);
                 return;
             }
@@ -264,7 +264,7 @@ namespace AniWorldReminder_TelegramBot.Services
                 await SendMessageAsync(message.Chat.Id, messageText);
             }
 
-            await DBService.UpdateUserState(telegramChatId, UserState.Undefined);
+            await DBService.UpdateUserStateAsync(telegramChatId, UserState.Undefined);
         }
 
         private async Task InsertSeries(string seriesName, StreamingPortal streamingPortal)
@@ -375,7 +375,7 @@ namespace AniWorldReminder_TelegramBot.Services
                 return;
             }
 
-            await DBService.UpdateVerifyToken(telegramChatId, token);  
+            await DBService.UpdateVerifyTokenAsync(telegramChatId, token);  
 
             StringBuilder sb = new();
 
