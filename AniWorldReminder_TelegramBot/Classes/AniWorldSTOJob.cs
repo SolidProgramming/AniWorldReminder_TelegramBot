@@ -47,29 +47,31 @@ namespace AniWorldReminder_TelegramBot.Classes
             if (userReminderSeries is null)
                 return;
 
-            IEnumerable<IGrouping<int, SeriesReminderModel>>? userReminderSeriesGroups = userReminderSeries.GroupBy(_ => _.Id);
+            IEnumerable<IGrouping<int, SeriesReminderModel>>? userReminderSeriesGroups = userReminderSeries.GroupBy(_ => _.Series!.Id);
 
             foreach (IGrouping<int, SeriesReminderModel> group in userReminderSeriesGroups)
             {
-                SeriesReminderModel series = group.First();
+                SeriesReminderModel seriesReminder = group.First();
 
-                (bool updateAvailable, SeriesInfoModel? seriesInfo) = await UpdateNeeded(series);
+                if (seriesReminder.Series is null)
+                    continue;
+
+                (bool updateAvailable, SeriesInfoModel? seriesInfo) = await UpdateNeeded(seriesReminder.Series);
 
                 if (!updateAvailable || seriesInfo is null)
                     continue;
 
-                List<EpisodeModel>? newEpisodes = await GetNewEpisodes(series.Id, seriesInfo);
+                List<EpisodeModel>? newEpisodes = await GetNewEpisodes(seriesReminder.Series.Id, seriesInfo);
 
                 if (newEpisodes is null || newEpisodes.Count == 0)
                     continue;
 
-                await DBService.UpdateSeriesInfoAsync(series.Id, seriesInfo);
-
-                await DBService.InsertEpisodesAsync(series.Id, newEpisodes);
+                await DBService.InsertEpisodesAsync(seriesReminder.Series.Id, newEpisodes);
+                await DBService.UpdateSeriesInfoAsync(seriesReminder.Series.Id, seriesInfo);
 
                 await SendNotifications(seriesInfo, group, newEpisodes);
 
-                await DBService.InsertDownloadAsync(series.Id, newEpisodes);
+                await DBService.InsertDownloadAsync(seriesReminder.Series.Id, newEpisodes);
                 await SendAdminNotification(group, newEpisodes);
             }
         }
@@ -78,7 +80,7 @@ namespace AniWorldReminder_TelegramBot.Classes
         {
             int maxCount = 5;
 
-            string? seriesName = seriesGroup.First().Name;
+            string? seriesName = seriesGroup.First().Series!.Name;
 
             if (string.IsNullOrEmpty(seriesName))
                 return;
@@ -101,21 +103,23 @@ namespace AniWorldReminder_TelegramBot.Classes
 
             string messageText = sb.ToString();
 
-            List<string?>? chatsToInform = seriesGroup
-                .Select(_ => _.TelegramChatId)
-                    .ToList();
-
-            foreach (string? telegramChatId in chatsToInform)
+            foreach (SeriesReminderModel? seriesReminder in seriesGroup)
             {
-                Logger.LogInformation($"{DateTime.Now} | Sent 'New Episodes' notification to chat: {telegramChatId}");
+                string usernameText =  string.IsNullOrEmpty(seriesReminder.User!.Username) ? "N/A" : seriesReminder.User.Username;
+                Logger.LogInformation($"{DateTime.Now} | Sent 'New Episodes' notification to chat: {usernameText}|{seriesReminder.User.TelegramChatId}");
+
+                if (!string.IsNullOrEmpty(seriesReminder.User?.Username))
+                {
+                    messageText = $"Hallo {seriesReminder.User.Username}!\n\n" + messageText;
+                }
 
                 if (string.IsNullOrEmpty(seriesInfo.CoverArtUrl))
                 {
-                    await TelegramBotService.SendMessageAsync(Convert.ToInt64(telegramChatId), messageText);
+                    await TelegramBotService.SendMessageAsync(Convert.ToInt64(seriesReminder.User.TelegramChatId), messageText);
                 }
                 else
                 {
-                    await TelegramBotService.SendPhotoAsync(Convert.ToInt64(telegramChatId), seriesInfo.CoverArtUrl, messageText);
+                    await TelegramBotService.SendPhotoAsync(Convert.ToInt64(seriesReminder.User.TelegramChatId), seriesInfo.CoverArtUrl, messageText);
                 }
             }
         }
@@ -127,7 +131,7 @@ namespace AniWorldReminder_TelegramBot.Classes
             if (botSettings is null || string.IsNullOrEmpty(botSettings.AdminChat))
                 return;
 
-            string? seriesName = seriesGroup.First().Name;
+            string? seriesName = seriesGroup.First().Series!.Name;
 
             if (string.IsNullOrEmpty(seriesName))
                 return;
@@ -151,13 +155,13 @@ namespace AniWorldReminder_TelegramBot.Classes
 
         private async Task<(bool updateAvailable, SeriesInfoModel? seriesInfo)> UpdateNeeded(SeriesModel series)
         {
-            if (series is null || string.IsNullOrEmpty(series.Name) || string.IsNullOrEmpty(series.StreamingPortal))
+            if (series is null || string.IsNullOrEmpty(series.Name) || series.StreamingPortal is null || string.IsNullOrEmpty(series.StreamingPortal.Name))
                 return (false, null);
 
             (int seasonCount, int episodeCount) = await DBService.GetSeriesSeasonEpisodeCountAsync(series.Id);
 
             IStreamingPortalService streamingPortalService;
-            StreamingPortal streamingPortal = StreamingPortalHelper.GetStreamingPortalByName(series.StreamingPortal);
+            StreamingPortal streamingPortal = StreamingPortalHelper.GetStreamingPortalByName(series.StreamingPortal.Name);
 
             switch (streamingPortal)
             {

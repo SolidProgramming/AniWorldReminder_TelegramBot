@@ -1,7 +1,8 @@
 ﻿namespace AniWorldReminder_TelegramBot.Models.DB
 {
-    public class SeriesReminderModel : SeriesModel
+    public class SeriesReminderModel
     {
-        public string? TelegramChatId { get; set; }
+        public SeriesModel? Series { get; set; }
+        public UsersModel? User { get; set; }
     }
 }

@@ -188,7 +188,6 @@ namespace AniWorldReminder_TelegramBot.Services
 
             return users_series.FirstOrDefault();
         }
-
         public async Task<List<DBModels.UsersSeriesModel>?> GetUsersSeriesAsync()
         {
             using MySqlConnection connection = new(DBConnectionString);
@@ -303,12 +302,26 @@ namespace AniWorldReminder_TelegramBot.Services
         {
             using MySqlConnection connection = new(DBConnectionString);
 
-            string query = "SELECT DISTINCT series.id, streamingportals.Name AS StreamingPortal, series.Name, TelegramChatId FROM users " +
-                "JOIN users_series ON users.id = users_series.UserId " +
-                "JOIN series ON users_series.SeriesId = series.id " +
-                "JOIN streamingportals ON series.StreamingPortalId = streamingportals.id";
+            string query = "SELECT DISTINCT users.*, series.*, streamingportals.* " +
+                           "FROM users AS users " +
+                           "JOIN users_series ON users.id = users_series.UserId " +
+                           "JOIN series ON users_series.SeriesId = series.id " +
+                           "JOIN streamingportals ON series.StreamingPortalId = streamingportals.id";
 
-            IEnumerable<DBModels.SeriesReminderModel> reminderSeries = await connection.QueryAsync<DBModels.SeriesReminderModel>(query);
+            IEnumerable<DBModels.SeriesReminderModel> reminderSeries =
+           await connection.QueryAsync<DBModels.UsersModel, DBModels.SeriesModel, DBModels.StreamingPortalModel, DBModels.SeriesReminderModel>
+           (query, (users, series, streamingportals) =>
+           {
+               DBModels.SeriesReminderModel reminderSerie = new()
+               {
+                   Series = series,
+                   User = users
+               };
+
+               reminderSerie.Series.StreamingPortal = streamingportals;
+
+               return reminderSerie;
+           });
 
             if (reminderSeries is null)
                 return null;
