@@ -101,7 +101,7 @@ namespace AniWorldReminder_TelegramBot.Classes
                 sb.AppendLine($"{Emoji.SmallBlackSquare} <b>...</b>");
             }
 
-            string messageText = sb.ToString();
+            string messageText = "";
 
             foreach (SeriesReminderModel? seriesReminder in seriesGroup)
             {
@@ -110,7 +110,11 @@ namespace AniWorldReminder_TelegramBot.Classes
 
                 if (!string.IsNullOrEmpty(seriesReminder.User?.Username))
                 {
-                    messageText = $"Hallo {seriesReminder.User.Username}!\n\n" + messageText;
+                    messageText = $"Hallo {seriesReminder.User.Username}!\n\n" + sb.ToString();
+                }
+                else
+                {
+                    messageText = sb.ToString();
                 }
 
                 if (string.IsNullOrEmpty(seriesInfo.CoverArtUrl))
