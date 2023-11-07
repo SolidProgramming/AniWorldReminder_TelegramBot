@@ -175,7 +175,7 @@ namespace AniWorldReminder_TelegramBot.Services
 
             string telegramChatId = message.Chat.Id.ToString();
 
-            UsersModel user = await DBService.GetUserAsync(telegramChatId);
+            UsersModel? user = await DBService.GetUserAsync(telegramChatId);
 
             if (user is null)
                 await DBService.InsertUserAsync(telegramChatId);
@@ -360,7 +360,7 @@ namespace AniWorldReminder_TelegramBot.Services
 
             if (user.Verified == VerificationStatus.Verified)
             {
-                messageText = $"{Emoji.ExclamationmarkRed} <b>Du bist schon verifiziert!</b> {Emoji.ExclamationmarkRed}";
+                messageText = $"{Emoji.ExclamationmarkRed} <b>Du bist schon verifiziert!</b> {Emoji.ExclamationmarkRed}\nBenutzername: <b>{user.Username}</b>";
                 await SendMessageAsync(message.Chat.Id, messageText);
                 return;
             }
@@ -380,10 +380,9 @@ namespace AniWorldReminder_TelegramBot.Services
             StringBuilder sb = new();
 
             sb.AppendLine($"{Emoji.Confetti} <b>Deine Daten zum Verifikationsprozesses:</b> {Emoji.Confetti}\n");
-            sb.AppendLine($"{Emoji.Checkmark} Telegram Chat Id: <b>{telegramChatId}</b>\n");
             sb.AppendLine($"{Emoji.Checkmark} Token: <b>{token}</b>\n");
             sb.AppendLine($"{Emoji.AlarmClock} Token ist gültig bis: <b>{tokenValidation.ExpireDate}</b>\n\n");
-            sb.AppendLine($"{Emoji.ExclamationmarkRed} <b>Bitte gebe diese Daten auf der Webseite um den Verifikationsprozess abzuschließen</b> {Emoji.ExclamationmarkRed}\n");
+            sb.AppendLine($"{Emoji.ExclamationmarkRed} <b>Bitte gebe diese Daten auf der Webseite ein um den Verifikationsprozess abzuschließen</b> {Emoji.ExclamationmarkRed}\n");
 
             await SendMessageAsync(message.Chat.Id, sb.ToString());
         }
@@ -402,7 +401,7 @@ namespace AniWorldReminder_TelegramBot.Services
             await SendMessageAsync(message.Chat.Id, answerText, rkm: rkm);
         }
 
-        private static ReplyKeyboardMarkup GetKeyboard(List<string> seriesNames)
+        private static ReplyKeyboardMarkup GetKeyboard(List<string> text)
         {
             ReplyKeyboardMarkup? rkm = new("")
             {
@@ -411,9 +410,9 @@ namespace AniWorldReminder_TelegramBot.Services
             List<KeyboardButton[]>? rows = new();
             List<KeyboardButton>? cols = new();
 
-            for (int i = 0; i < seriesNames.Count; i++)
+            for (int i = 0; i < text.Count; i++)
             {
-                string seriesName = seriesNames[i].StripHtmlTags();
+                string seriesName = text[i].StripHtmlTags();
 
                 cols.Add(new KeyboardButton(seriesName));
 
