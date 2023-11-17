@@ -62,11 +62,20 @@ namespace AniWorldReminder_TelegramBot
 
             app.Logger.LogInformation($"{DateTime.Now} | Your WAN IP: {ipv4NoProxy}");
 
-            ProxyAccountModel? proxyAccount = SettingsHelper.ReadSettings<ProxyAccountModel>();
+            SettingsModel? settings = SettingsHelper.ReadSettings<SettingsModel>();
+
+            if (settings is null)
+                return;
+
             WebProxy? proxy = null;
 
-            if (proxyAccount is not null)
-                proxy = ProxyFactory.CreateProxy(proxyAccount);
+            if (settings.UseProxy)
+            {
+                ProxyAccountModel? proxyAccount = settings.ProxySettings;
+
+                if (proxyAccount is not null)
+                    proxy = ProxyFactory.CreateProxy(proxyAccount);
+            }
 
             IStreamingPortalServiceFactory streamingPortalServiceFactory = app.Services.GetRequiredService<IStreamingPortalServiceFactory>();
 

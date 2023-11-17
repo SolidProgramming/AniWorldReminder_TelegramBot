@@ -29,8 +29,12 @@ namespace AniWorldReminder_TelegramBot.Classes
 
             if (settings is null) return default;
 
-            return settings.GetSetting<T>();
+            if (typeof(T) == typeof(SettingsModel))
+            {
+                return (T)Convert.ChangeType(settings, typeof(T));
+            }
 
+            return settings.GetSetting<T>();
         }
 
         public static T? GetSetting<T>(this SettingsModel settings)

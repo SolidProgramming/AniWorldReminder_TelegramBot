@@ -10,6 +10,9 @@ namespace AniWorldReminder_TelegramBot.Models
         [JsonPropertyName("Database")]
         public DatabaseSettingsModel DatabaseSettings { get; set; } = default!;
 
+        [JsonPropertyName("UseProxy")]
+        public bool UseProxy { get; set; } = default!;
+
         [JsonPropertyName("Proxy")]
         public ProxyAccountModel ProxySettings { get; set; } = default!;
     }
