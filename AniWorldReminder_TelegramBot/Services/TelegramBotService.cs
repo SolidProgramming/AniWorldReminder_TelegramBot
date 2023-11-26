@@ -379,10 +379,13 @@ namespace AniWorldReminder_TelegramBot.Services
 
             StringBuilder sb = new();
 
+            const string website = "https://aniworldwebpanel.lucaweidmann.de/verify";
+
             sb.AppendLine($"{Emoji.Confetti} <b>Deine Daten zum Verifikationsprozesses:</b> {Emoji.Confetti}\n");
             sb.AppendLine($"{Emoji.Checkmark} Token: <b>{token}</b>\n");
             sb.AppendLine($"{Emoji.AlarmClock} Token ist gültig bis: <b>{tokenValidation.ExpireDate}</b>\n\n");
-            sb.AppendLine($"{Emoji.ExclamationmarkRed} <b>Bitte gebe diese Daten auf der Webseite ein um den Verifikationsprozess abzuschließen</b> {Emoji.ExclamationmarkRed}\n");
+            sb.AppendLine($"{Emoji.ExclamationmarkRed} <b>Bitte gebe diese Daten auf der folgenden Webseite ein um den Verifikationsprozess abzuschließen und dich einzuloggen</b> {Emoji.ExclamationmarkRed}\n\n");
+            sb.AppendLine($"{website}\n");
 
             await SendMessageAsync(message.Chat.Id, sb.ToString());
         }

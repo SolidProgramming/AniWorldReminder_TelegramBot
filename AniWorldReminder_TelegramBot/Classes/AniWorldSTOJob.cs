@@ -72,7 +72,7 @@ namespace AniWorldReminder_TelegramBot.Classes
                 await SendNotifications(seriesInfo, group, newEpisodes);
 
                 await DBService.InsertDownloadAsync(seriesReminder.Series.Id, newEpisodes);
-                await SendAdminNotification(group, newEpisodes);
+                //await SendAdminNotification(group, newEpisodes);
             }
         }
 
