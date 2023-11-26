@@ -437,24 +437,39 @@ namespace AniWorldReminder_TelegramBot.Services
             await BotClient.SendChatActionAsync(chatId, chatAction);
         }
 
-        public async Task<Message> SendMessageAsync(long chatId, string text, int? replyId = null, bool showLinkPreview = true, ParseMode parseMode = ParseMode.Html, ReplyKeyboardMarkup? rkm = null)
+        public async Task<Message?> SendMessageAsync(long chatId, string text, int? replyId = null, bool showLinkPreview = true, ParseMode parseMode = ParseMode.Html, ReplyKeyboardMarkup? rkm = null)
         {
-            return await BotClient.SendTextMessageAsync(
+            try
+            {
+                return await BotClient.SendTextMessageAsync(
                     chatId: chatId,
                     text: text,
                     replyToMessageId: replyId,
                     parseMode: parseMode,
                     disableWebPagePreview: !showLinkPreview,
                     replyMarkup: rkm);
+            }
+            catch (Exception)
+            {
+                return null;
+            }            
         }
 
-        public async Task<Message> SendPhotoAsync(long chatId, string photoUrl, string? text = null, ParseMode parseMode = ParseMode.Html)
+        public async Task<Message?> SendPhotoAsync(long chatId, string photoUrl, string? text = null, ParseMode parseMode = ParseMode.Html)
         {
-            return await BotClient.SendPhotoAsync(
-                chatId,
-          new InputFileUrl(photoUrl),
-                caption: text,
-                parseMode: parseMode);
+            try
+            {
+                return await BotClient.SendPhotoAsync(
+                               chatId,
+                         new InputFileUrl(photoUrl),
+                               caption: text,
+                               parseMode: parseMode);
+            }
+            catch (Exception)
+            {
+                return await SendMessageAsync(chatId, text, parseMode: parseMode);
+            }
+           
         }                
     }
 }

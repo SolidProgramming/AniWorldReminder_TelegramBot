@@ -32,12 +32,12 @@ namespace AniWorldReminder_TelegramBot
                 return streamingPortalServiceFactory;
             });
 
-            builder.Services.AddQuartz(_ =>
-            {
-                _.AddJobAndTrigger<AniWorldSTOJob>(60);
-            });
+            //builder.Services.AddQuartz(_ =>
+            //{
+            //    _.AddJobAndTrigger<AniWorldSTOJob>(60);
+            //});
 
-            builder.Services.AddQuartzHostedService(_ => _.WaitForJobsToComplete = true);
+           // builder.Services.AddQuartzHostedService(_ => _.WaitForJobsToComplete = true);
 
             WebApplication? app = builder.Build();
             MethodTimeLogger.Logger = app.Logger;
