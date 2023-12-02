@@ -366,11 +366,19 @@ namespace AniWorldReminder_TelegramBot.Services
             }
 
             string? token = Helper.GenerateToken(user);
-            TokenValidationModel tokenValidation = Helper.ValidateToken(user, token);
 
-            if (string.IsNullOrEmpty(token) || !tokenValidation.Validated)
+            if (string.IsNullOrEmpty(token))
             {
                 messageText = $"{Emoji.ExclamationmarkRed} <b>Verifikations Code konnte nicht erstellt werden!</b> {Emoji.ExclamationmarkRed}";
+                await SendMessageAsync(message.Chat.Id, messageText);
+                return;
+            }
+
+            TokenValidationModel tokenValidation = Helper.ValidateToken(user, token);
+
+            if (!tokenValidation.Validated)
+            {
+                messageText = $"{Emoji.ExclamationmarkRed} <b>Verifikations Code wurde erstellt aber konnte nicht validiert werden!</b> {Emoji.ExclamationmarkRed}";
                 await SendMessageAsync(message.Chat.Id, messageText);
                 return;
             }

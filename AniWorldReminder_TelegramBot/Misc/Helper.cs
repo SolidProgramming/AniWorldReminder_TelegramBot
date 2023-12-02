@@ -12,7 +12,7 @@ namespace AniWorldReminder_TelegramBot.Misc
             TokenValidationModel result = new();
             byte[] data = Convert.FromBase64String(token);
             byte[] _time = data.Take(8).ToArray();
-            byte[] _key = data.Skip(8).Take(9).ToArray();
+            byte[] _key = data.Skip(8).Take(user.TelegramChatId.Length).ToArray();
 
             DateTime when = DateTime.FromBinary(BitConverter.ToInt64(_time, 0));
             result.ExpireDate = when;
