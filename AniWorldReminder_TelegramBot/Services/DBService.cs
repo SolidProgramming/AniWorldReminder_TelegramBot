@@ -302,20 +302,21 @@ namespace AniWorldReminder_TelegramBot.Services
         {
             using MySqlConnection connection = new(DBConnectionString);
 
-            string query = "SELECT DISTINCT users.*, series.*, streamingportals.* " +
+            string query = "SELECT DISTINCT users.*, series.*, streamingportals.*, users_series.* " +
                            "FROM users AS users " +
                            "JOIN users_series ON users.id = users_series.UserId " +
                            "JOIN series ON users_series.SeriesId = series.id " +
                            "JOIN streamingportals ON series.StreamingPortalId = streamingportals.id";
 
             IEnumerable<DBModels.SeriesReminderModel> reminderSeries =
-           await connection.QueryAsync<DBModels.UsersModel, DBModels.SeriesModel, DBModels.StreamingPortalModel, DBModels.SeriesReminderModel>
-           (query, (users, series, streamingportals) =>
+           await connection.QueryAsync<DBModels.UsersModel, DBModels.SeriesModel, DBModels.StreamingPortalModel, UsersSeriesModel, DBModels.SeriesReminderModel>
+           (query, (users, series, streamingportals, users_series) =>
            {
                DBModels.SeriesReminderModel reminderSerie = new()
                {
                    Series = series,
-                   User = users
+                   User = users,
+                   Language = users_series.LanguageFlag
                };
 
                reminderSerie.Series.StreamingPortal = streamingportals;
@@ -391,7 +392,7 @@ namespace AniWorldReminder_TelegramBot.Services
         {
             using MySqlConnection connection = new(DBConnectionString);
 
-            string query = "INSERT INTO episodes (SeriesId, Season, Episode, Name) VALUES (@SeriesId, @Season, @Episode, @Name)";
+            string query = "INSERT INTO episodes (SeriesId, Season, Episode, Name, LanguageFlag) VALUES (@SeriesId, @Season, @Episode, @Name, @LanguageFlag)";
 
             Dictionary<string, object> dictionary;
 
@@ -405,7 +406,8 @@ namespace AniWorldReminder_TelegramBot.Services
                     { "@SeriesId",  seriesId},
                     { "@Season",  episode.Season},
                     { "@Episode",  episode.Episode},
-                    { "@Name",  episode.Name}
+                    { "@Name",  episode.Name},
+                    { "@LanguageFlag", episode.LanguageFlag }
                 };
 
                 DynamicParameters parameters = new(dictionary);
@@ -488,6 +490,28 @@ namespace AniWorldReminder_TelegramBot.Services
                     { "@SeriesId",  seriesId},
                     { "@Season",  episode.Season},
                     { "@Episode",  episode.Episode}
+                };
+
+                DynamicParameters parameters = new(dictionary);
+
+                await connection.ExecuteAsync(query, parameters);
+            }
+        }
+
+        public async Task UpdateEpisodesAsync(int seriesId, List<EpisodeModel> episodes)
+        {
+            using MySqlConnection connection = new(DBConnectionString);
+
+            foreach (EpisodeModel episode in episodes)
+            {
+                string query = "UPDATE episodes " +
+                           "SET episodes.LanguageFlag = @LanguageFlag " +
+                           "WHERE episodes.Id = @EpisodeId";
+
+                Dictionary<string, object> dictionary = new()
+                {
+                    { "@LanguageFlag", episode.LanguageFlag },
+                    { "@EpisodeId",  episode.Id}
                 };
 
                 DynamicParameters parameters = new(dictionary);

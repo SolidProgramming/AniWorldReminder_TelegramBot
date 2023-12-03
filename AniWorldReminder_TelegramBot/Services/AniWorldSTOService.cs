@@ -275,7 +275,7 @@ namespace AniWorldReminder_TelegramBot.Services
                     Name = episodeName,
                     Episode = i,
                     Season = season,
-                    Languages = GetEpisodeLanguages(i, html)
+                    LanguageFlag = GetEpisodeLanguages(i, html)
                 });
 
                 i++;

@@ -4,5 +4,6 @@
     {
         public SeriesModel? Series { get; set; }
         public UsersModel? User { get; set; }
+        public Language Language { get; set; }
     }
 }
