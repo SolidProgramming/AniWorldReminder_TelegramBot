@@ -479,7 +479,7 @@ namespace AniWorldReminder_TelegramBot.Services
         {
             using MySqlConnection connection = new(DBConnectionString);
 
-            string query = "INSERT INTO download (SeriesId, Season, Episode) VALUES (@SeriesId, @Season, @Episode)";
+            string query = "INSERT INTO download (SeriesId, Season, Episode, LanguageFlag) VALUES (@SeriesId, @Season, @Episode, @LanguageFlag)";
 
             Dictionary<string, object> dictionary;
 
@@ -489,7 +489,8 @@ namespace AniWorldReminder_TelegramBot.Services
                 {
                     { "@SeriesId",  seriesId},
                     { "@Season",  episode.Season},
-                    { "@Episode",  episode.Episode}
+                    { "@Episode",  episode.Episode},
+                    { "@LanguageFlag",  episode.LanguageFlag}
                 };
 
                 DynamicParameters parameters = new(dictionary);

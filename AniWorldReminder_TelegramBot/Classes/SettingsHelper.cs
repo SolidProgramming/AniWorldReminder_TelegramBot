@@ -37,7 +37,7 @@ namespace AniWorldReminder_TelegramBot.Classes
             return settings.GetSetting<T>();
         }
 
-        public static T? GetSetting<T>(this SettingsModel settings)
+        private static T? GetSetting<T>(this SettingsModel settings)
         {
             return (T?)settings?.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .First(_ => _.PropertyType == typeof(T))
