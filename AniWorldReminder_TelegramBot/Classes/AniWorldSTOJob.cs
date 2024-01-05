@@ -67,6 +67,8 @@ namespace AniWorldReminder_TelegramBot.Classes
                 if (!updateAvailable || seriesInfo is null)
                     continue;
 
+                matchingEpisodes.Clear();
+
                 if (updateEpisodes.HasItems())
                 {
                     await DBService.UpdateEpisodesAsync(seriesReminder.Series.Id, updateEpisodes);
@@ -78,6 +80,11 @@ namespace AniWorldReminder_TelegramBot.Classes
                 }
 
                 List<EpisodeModel>? newEpisodes = await GetNewEpisodes(seriesReminder.Series.Id, seriesInfo);
+
+                if (updateAvailable && !updateEpisodes.HasItems() && !newEpisodes.HasItems())
+                {
+                    await DBService.UpdateSeriesInfoAsync(seriesReminder.Series.Id, seriesInfo);
+                }
 
                 if (newEpisodes.HasItems())
                 {
