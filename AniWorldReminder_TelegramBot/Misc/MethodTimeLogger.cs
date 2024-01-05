@@ -9,7 +9,7 @@ namespace AniWorldReminder_TelegramBot.Misc
         public static void Log(MethodBase methodBase, TimeSpan timeSpan, string message)
         {
             string additionalInfo = $" Additional Info: {message}";
-            string duration = $" Runtime: {timeSpan:mm}{timeSpan:ss}s.";
+            string duration = $" Runtime: {timeSpan:mm}m {timeSpan:ss}s.";
 
             Type type = methodBase.DeclaringType;
             Type? @interface = type!.GetInterfaces()

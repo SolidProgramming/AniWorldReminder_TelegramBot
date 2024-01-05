@@ -60,6 +60,8 @@ namespace AniWorldReminder_TelegramBot.Classes
                 if (seriesReminder.Series is null)
                     continue;
 
+                Logger.LogInformation($"{DateTime.Now} | Scanning for changes: {seriesReminder.Series.Name}");
+
                 (bool updateAvailable, SeriesInfoModel? seriesInfo, List<EpisodeModel>? languageUpdateEpisodes, List<EpisodeModel>? newEpisodes, List<EpisodeModel>? namesUpdatedEpisodes) = await UpdateNeeded(seriesReminder);
 
                 if (!updateAvailable || seriesInfo is null)
@@ -104,6 +106,7 @@ namespace AniWorldReminder_TelegramBot.Classes
 
                 if (matchingEpisodes.HasItems())
                 {
+                    Logger.LogInformation($"{DateTime.Now} | Changes found for: {seriesReminder.Series.Name} | {matchingEpisodes.Count}x");
                     await SendNotifications(seriesInfo, group, matchingEpisodes);
 
                     if (telegramBotSettings is not null && !string.IsNullOrEmpty(telegramBotSettings.AdminChat))
