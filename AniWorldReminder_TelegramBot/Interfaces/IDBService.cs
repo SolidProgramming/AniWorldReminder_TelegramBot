@@ -26,5 +26,6 @@ namespace AniWorldReminder_TelegramBot.Interfaces
         Task UpdateVerifyTokenAsync(string telegramChatId, string token);
         Task InsertDownloadAsync(int seriesId, List<EpisodeModel> episodes);
         Task UpdateEpisodesAsync(int seriesId, List<EpisodeModel> episodes);
+        Task<UserWebsiteSettings?> GetUserWebsiteSettings(string telegramChatId);
     }
 }

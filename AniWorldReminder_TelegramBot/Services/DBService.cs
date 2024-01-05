@@ -76,7 +76,6 @@ namespace AniWorldReminder_TelegramBot.Services
 
             return await connection.QueryFirstOrDefaultAsync<DBModels.UsersModel>(query, parameters);
         }
-
         public async Task<DBModels.SeriesModel> GetSeriesAsync(string seriesName)
         {
             using MySqlConnection connection = new(DBConnectionString);
@@ -92,7 +91,6 @@ namespace AniWorldReminder_TelegramBot.Services
 
             return await connection.QueryFirstOrDefaultAsync<DBModels.SeriesModel>(query, parameters);
         }
-
         public async Task<UsersModel> InsertUserAsync(string telegramChatId)
         {
             using MySqlConnection connection = new(DBConnectionString);
@@ -113,7 +111,6 @@ namespace AniWorldReminder_TelegramBot.Services
                 TelegramChatId = telegramChatId
             };
         }
-
         public async Task<int> InsertSeriesAsync(AniWorldModels.SeriesInfoModel seriesInfo, StreamingPortal streamingPortal)
         {
             if (string.IsNullOrEmpty(seriesInfo.Name))
@@ -156,7 +153,6 @@ namespace AniWorldReminder_TelegramBot.Services
 
             return await connection.ExecuteScalarAsync<int>(query, parameters);
         }
-
         public async Task<DBModels.UsersSeriesModel?> GetUsersSeriesAsync(string telegramChatId, string seriesName)
         {
             using MySqlConnection connection = new(DBConnectionString);
@@ -210,7 +206,6 @@ namespace AniWorldReminder_TelegramBot.Services
 
             return users_series.ToList();
         }
-
         public async Task<List<DBModels.UsersSeriesModel>?> GetUsersSeriesAsync(string telegramChatId)
         {
             using MySqlConnection connection = new(DBConnectionString);
@@ -241,7 +236,6 @@ namespace AniWorldReminder_TelegramBot.Services
 
             return users_series.ToList();
         }
-
         public async Task InsertUsersSeriesAsync(DBModels.UsersSeriesModel usersSeries)
         {
             using MySqlConnection connection = new(DBConnectionString);
@@ -261,7 +255,6 @@ namespace AniWorldReminder_TelegramBot.Services
 
             await connection.ExecuteAsync(query, parameters);
         }
-
         public async Task DeleteUsersSeriesAsync(DBModels.UsersSeriesModel usersSeries)
         {
             using MySqlConnection connection = new(DBConnectionString);
@@ -277,7 +270,6 @@ namespace AniWorldReminder_TelegramBot.Services
 
             await connection.ExecuteAsync(query, parameters);
         }
-
         public async Task UpdateSeriesInfoAsync(int seriesId, AniWorldModels.SeriesInfoModel seriesInfo)
         {
             using MySqlConnection connection = new(DBConnectionString);
@@ -297,7 +289,6 @@ namespace AniWorldReminder_TelegramBot.Services
 
             await connection.ExecuteAsync(query, parameters);
         }
-
         public async Task<List<DBModels.SeriesReminderModel>?> GetUsersReminderSeriesAsync()
         {
             using MySqlConnection connection = new(DBConnectionString);
@@ -329,7 +320,6 @@ namespace AniWorldReminder_TelegramBot.Services
 
             return reminderSeries.ToList();
         }
-
         public async Task<(int seasonCount, int episodeCount)> GetSeriesSeasonEpisodeCountAsync(int seriesId)
         {
             using MySqlConnection connection = new(DBConnectionString);
@@ -346,7 +336,6 @@ namespace AniWorldReminder_TelegramBot.Services
 
             return await connection.QuerySingleOrDefaultAsync<(int, int)>(query, parameters);
         }
-
         public async Task<List<EpisodeModel>?> GetSeriesSeasonEpisodesAsync(int seriesId, int season)
         {
             using MySqlConnection connection = new(DBConnectionString);
@@ -367,7 +356,6 @@ namespace AniWorldReminder_TelegramBot.Services
 
             return episodes.ToList();
         }
-
         public async Task<List<EpisodeModel>?> GetSeriesEpisodesAsync(int seriesId)
         {
             using MySqlConnection connection = new(DBConnectionString);
@@ -387,7 +375,6 @@ namespace AniWorldReminder_TelegramBot.Services
 
             return episodes.ToList();
         }
-
         public async Task InsertEpisodesAsync(int seriesId, List<EpisodeModel> episodes)
         {
             using MySqlConnection connection = new(DBConnectionString);
@@ -415,7 +402,6 @@ namespace AniWorldReminder_TelegramBot.Services
                 await connection.ExecuteAsync(query, parameters);
             }
         }
-
         public async Task<UserState> GetUserStateAsync(string telegramChatId)
         {
             using MySqlConnection connection = new(DBConnectionString);
@@ -435,7 +421,6 @@ namespace AniWorldReminder_TelegramBot.Services
 
             return await connection.QuerySingleOrDefaultAsync<UserState>(query, parameters);
         }
-
         public async Task UpdateUserStateAsync(string telegramChatId, UserState userState)
         {
             using MySqlConnection connection = new(DBConnectionString);
@@ -455,7 +440,6 @@ namespace AniWorldReminder_TelegramBot.Services
 
             await connection.ExecuteAsync(query, parameters);
         }
-
         public async Task UpdateVerifyTokenAsync(string telegramChatId, string token)
         {
             using MySqlConnection connection = new(DBConnectionString);
@@ -474,7 +458,6 @@ namespace AniWorldReminder_TelegramBot.Services
 
             await connection.ExecuteAsync(query, parameters);
         }
-
         public async Task InsertDownloadAsync(int seriesId, List<EpisodeModel> episodes)
         {
             using MySqlConnection connection = new(DBConnectionString);
@@ -498,7 +481,6 @@ namespace AniWorldReminder_TelegramBot.Services
                 await connection.ExecuteAsync(query, parameters);
             }
         }
-
         public async Task UpdateEpisodesAsync(int seriesId, List<EpisodeModel> episodes)
         {
             using MySqlConnection connection = new(DBConnectionString);
@@ -520,6 +502,23 @@ namespace AniWorldReminder_TelegramBot.Services
 
                 await connection.ExecuteAsync(query, parameters);
             }
+        }
+        public async Task<UserWebsiteSettings?> GetUserWebsiteSettings(string telegramChatId)
+        {
+            using MySqlConnection connection = new(DBConnectionString);
+
+            Dictionary<string, object> dictionary = new()
+            {
+                { "@TelegramChatId", telegramChatId }
+            };
+
+            DynamicParameters parameters = new(dictionary);
+
+            string query = "SELECT users_settings.* FROM users_settings " +
+                "LEFT JOIN users ON users_settings.UserId = users.id " +
+                "WHERE users.TelegramChatId = @TelegramChatId";
+
+            return await connection.QuerySingleOrDefaultAsync<UserWebsiteSettings>(query, parameters);
         }
     }
 }
