@@ -3,12 +3,10 @@ using AniWorldReminder_TelegramBot.Misc;
 using AniWorldReminder_TelegramBot.Models;
 using AniWorldReminder_TelegramBot.Models.AniWorld;
 using AniWorldReminder_TelegramBot.Models.DB;
-using AniWorldReminder_TelegramBot.Services;
-using MethodTimer;
-using MySqlX.XDevAPI;
 using Quartz;
 using System.Reflection;
 using System.Text;
+using System.Linq;
 
 namespace AniWorldReminder_TelegramBot.Classes
 {
@@ -55,28 +53,39 @@ namespace AniWorldReminder_TelegramBot.Classes
 
             IEnumerable<IGrouping<int, SeriesReminderModel>>? userReminderSeriesGroups = userReminderSeries.GroupBy(_ => _.Series!.Id);
 
-            foreach (IGrouping<int, SeriesReminderModel> group in userReminderSeriesGroups.Reverse())
+            foreach (IGrouping<int, SeriesReminderModel> group in userReminderSeriesGroups)
             {
                 SeriesReminderModel seriesReminder = group.First();
 
                 if (seriesReminder.Series is null)
                     continue;
 
-                (bool updateAvailable, SeriesInfoModel? seriesInfo, List<EpisodeModel>? updateEpisodes, List<EpisodeModel>? newEpisodes) = await UpdateNeeded(seriesReminder);
+                (bool updateAvailable, SeriesInfoModel? seriesInfo, List<EpisodeModel>? languageUpdateEpisodes, List<EpisodeModel>? newEpisodes, List<EpisodeModel>? namesUpdatedEpisodes) = await UpdateNeeded(seriesReminder);
 
                 if (!updateAvailable || seriesInfo is null)
                     continue;
 
                 matchingEpisodes.Clear();
 
-                if (updateEpisodes.HasItems())
+                if (namesUpdatedEpisodes.HasItems())
                 {
-                    await DBService.UpdateEpisodesAsync(seriesReminder.Series.Id, updateEpisodes);
+                    await DBService.UpdateEpisodesAsync(seriesReminder.Series.Id, namesUpdatedEpisodes);
 
-                    if (updateEpisodes.Any(_ => _.LanguageFlag.HasFlag(seriesReminder.Language)))
+                    string messageText = $"Es wurden folgende Episoden für <b>{seriesReminder.Series.Name}</b> mit <b>Namens-Updates</b> gefunden und geupdated!";
+                    await SendAdminNotification(namesUpdatedEpisodes, messageText);
+                }
+
+                if (languageUpdateEpisodes.HasItems())
+                {
+                    await DBService.UpdateEpisodesAsync(seriesReminder.Series.Id, languageUpdateEpisodes);
+
+                    if (languageUpdateEpisodes.Any(_ => _.LanguageFlag.HasFlag(seriesReminder.Language)))
                     {
-                        matchingEpisodes.AddRange(updateEpisodes.Where(_ => _.LanguageFlag.HasFlag(seriesReminder.Language)));
+                        matchingEpisodes.AddRange(languageUpdateEpisodes.Where(_ => _.LanguageFlag.HasFlag(seriesReminder.Language)));
                     }
+
+                    string messageText = $"Es wurden folgende Episoden für <b>{seriesReminder.Series.Name}</b> mit <b>Sprach-Updates</b> gefunden und geupdated!";
+                    await SendAdminNotification(languageUpdateEpisodes, messageText);
                 }
 
                 if (newEpisodes.HasItems())
@@ -88,6 +97,9 @@ namespace AniWorldReminder_TelegramBot.Classes
                     {
                         matchingEpisodes.AddRange(newEpisodes.Where(_ => _.LanguageFlag.HasFlag(seriesReminder.Language)));
                     }
+
+                    string messageText = $"Es wurden neue Episoden für <b>{seriesReminder.Series.Name}</b> gefunden und hinzugefügt!";
+                    await SendAdminNotification(newEpisodes, messageText);
                 }
 
                 if (matchingEpisodes.HasItems())
@@ -189,13 +201,37 @@ namespace AniWorldReminder_TelegramBot.Classes
             await TelegramBotService.SendMessageAsync(Convert.ToInt64(botSettings.AdminChat), messageText);
 
             Logger.LogInformation($"{DateTime.Now} | Sent 'New Episodes Admin' notification to chat: {botSettings.AdminChat}");
-
         }
 
-        private async Task<(bool updateAvailable, SeriesInfoModel? seriesInfo, List<EpisodeModel>? updateEpisodes, List<EpisodeModel>? newEpisodes)> UpdateNeeded(SeriesReminderModel seriesReminder)
+        private async Task SendAdminNotification(List<EpisodeModel> episodes, string messageText)
+        {
+            TelegramBotSettingsModel? botSettings = SettingsHelper.ReadSettings<TelegramBotSettingsModel>();
+
+            if (botSettings is null || string.IsNullOrEmpty(botSettings.AdminChat) || string.IsNullOrEmpty(messageText))
+                return;
+                 
+            StringBuilder sb = new();
+
+            sb.AppendLine($"Neue Admin Meldung:\n\n");
+            sb.AppendLine($"{messageText}\n\n");
+
+
+            foreach (EpisodeModel newEpisde in episodes)
+            {
+                sb.AppendLine($"{Emoji.SmallBlackSquare} S<b>{newEpisde.Season:D2}</b> E<b>{newEpisde.Episode:D2}</b> {Emoji.HeavyMinus} {newEpisde.Name} [{newEpisde.LanguageFlag.ToLanguageText()}]");
+            }
+
+            string fullMessageText = sb.ToString();
+
+            await TelegramBotService.SendMessageAsync(Convert.ToInt64(botSettings.AdminChat), fullMessageText);
+
+            Logger.LogInformation($"{DateTime.Now} | Sent Admin notification to chat: {botSettings.AdminChat}");
+        }
+
+        private async Task<(bool updateAvailable, SeriesInfoModel? seriesInfo, List<EpisodeModel>? updateEpisodes, List<EpisodeModel>? newEpisodes, List<EpisodeModel>? namesUpdatedEpisodes)> UpdateNeeded(SeriesReminderModel seriesReminder)
         {
             if (seriesReminder is null || seriesReminder.Series is null || string.IsNullOrEmpty(seriesReminder.Series.Name) || seriesReminder.Series.StreamingPortal is null || string.IsNullOrEmpty(seriesReminder.Series.StreamingPortal.Name))
-                return (false, null, null, null);
+                return (false, null, null, null, null);
 
             (int seasonCount, int episodeCount) = await DBService.GetSeriesSeasonEpisodeCountAsync(seriesReminder.Series.Id);
 
@@ -205,7 +241,7 @@ namespace AniWorldReminder_TelegramBot.Classes
             switch (streamingPortal)
             {
                 case StreamingPortal.Undefined:
-                    return (false, null, null, null);
+                    return (false, null, null, null, null);
                 case StreamingPortal.AniWorld:
                     streamingPortalService = AniWorldService;
                     break;
@@ -213,30 +249,30 @@ namespace AniWorldReminder_TelegramBot.Classes
                     streamingPortalService = STOService;
                     break;
                 default:
-                    return (false, null, null, null);
+                    return (false, null, null, null, null);
             }
 
             SeriesInfoModel? seriesInfo = await streamingPortalService.GetSeriesInfoAsync(seriesReminder.Series.Name, streamingPortal);
 
             if (seriesInfo is null)
-                return (false, null, null, null);
+                return (false, null, null, null, null);
 
 
             if (seriesInfo.Seasons is null || seriesInfo.Seasons.Count == 0)
             {
-                return (false, null, null, null);
+                return (false, null, null, null, null);
             }
-
 
             List<EpisodeModel>? languageUpdateEpisodes = await GetLanguageUpdateEpisodes(seriesReminder.Series.Id, seriesInfo);
             List<EpisodeModel>? newEpisodes = await GetNewEpisodes(seriesReminder.Series.Id, seriesInfo);
+            List<EpisodeModel>? namesUpdatedEpisodes = await GetEpisodeNamesUpdates(seriesReminder.Series.Id, seriesInfo);
 
-            if (languageUpdateEpisodes.HasItems() || newEpisodes.HasItems())
+            if (languageUpdateEpisodes.HasItems() || newEpisodes.HasItems() || namesUpdatedEpisodes.HasItems())
             {
-                return (true, seriesInfo, languageUpdateEpisodes, newEpisodes);
+                return (true, seriesInfo, languageUpdateEpisodes, newEpisodes, namesUpdatedEpisodes);
             }
 
-            return (false, null, null, null);
+            return (false, null, null, null, null);
         }
 
         private async Task<List<EpisodeModel>?> GetNewEpisodes(int seriesId, SeriesInfoModel seriesInfo)
@@ -286,6 +322,39 @@ namespace AniWorldReminder_TelegramBot.Classes
             }
 
             return updateEpisodes;
+        }
+
+        private async Task<List<EpisodeModel>?> GetEpisodeNamesUpdates(int seriesId, SeriesInfoModel seriesInfo)
+        {
+            List<EpisodeModel>? dbEpisodes = await DBService.GetSeriesEpisodesAsync(seriesId);
+            List<EpisodeModel>? newEpisodes = new();
+
+            if (dbEpisodes is null)
+            {
+                return seriesInfo.Seasons.SelectMany(_ => _.Episodes)
+                    .ToList();
+            }
+
+            foreach (SeasonModel season in seriesInfo.Seasons)
+            {
+                List<EpisodeModel>? tempNewEpisodes = season.Episodes.Where(seasonEp =>
+                    dbEpisodes.Any(dbEp => dbEp.Episode == seasonEp.Episode && dbEp.Season == seasonEp.Season && dbEp.Name != seasonEp.Name))
+                        .ToList();
+
+                if (!tempNewEpisodes.HasItems())
+                    continue;
+
+                foreach (EpisodeModel episode in tempNewEpisodes)
+                {
+                    EpisodeModel dbEp = dbEpisodes.First(dbEp => dbEp.Episode == episode.Episode && dbEp.Season == episode.Season);
+                    episode.Id = dbEp.Id;
+                    episode.SeriesId = dbEp.SeriesId;
+                }
+
+                newEpisodes.AddRange(tempNewEpisodes);
+            }
+
+            return newEpisodes;
         }
     }
 }

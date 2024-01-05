@@ -506,13 +506,14 @@ namespace AniWorldReminder_TelegramBot.Services
             foreach (EpisodeModel episode in episodes)
             {
                 string query = "UPDATE episodes " +
-                           "SET episodes.LanguageFlag = @LanguageFlag " +
+                           "SET episodes.LanguageFlag = @LanguageFlag, episodes.Name = @EpisodeName " +
                            "WHERE episodes.Id = @EpisodeId";
 
                 Dictionary<string, object> dictionary = new()
                 {
                     { "@LanguageFlag", episode.LanguageFlag },
-                    { "@EpisodeId",  episode.Id}
+                    { "@EpisodeId",  episode.Id},
+                    { "@EpisodeName",  episode.Name}
                 };
 
                 DynamicParameters parameters = new(dictionary);
