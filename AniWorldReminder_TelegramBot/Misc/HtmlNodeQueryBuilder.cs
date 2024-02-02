@@ -5,7 +5,7 @@ namespace AniWorldReminder_TelegramBot.Misc
 {
     public class HtmlNodeQueryBuilder
     {
-        private List<HtmlNode> _nodes = new();
+        private List<HtmlNode> _nodes = [];
 
         /// <summary>
         ///     Return all resulting nodes from the list
@@ -109,7 +109,7 @@ namespace AniWorldReminder_TelegramBot.Misc
         }
         public HtmlNodeQueryBuilder ByAttributeValues(string attributeName, List<string> attributeValues)
         {
-            List<HtmlNode> filteredNodes = new();
+            List<HtmlNode> filteredNodes = [];
             foreach (string attValue in attributeValues)
             {
                 string query = $".//*[@{attributeName}='{attValue}']";
@@ -123,7 +123,7 @@ namespace AniWorldReminder_TelegramBot.Misc
         }
         public List<HtmlNode> GetNodesByQuery(string query)
         {
-            List<HtmlNode> nodes = new();
+            List<HtmlNode> nodes = [];
 
             for (int i = 0; i < _nodes?.Count; i++)
             {

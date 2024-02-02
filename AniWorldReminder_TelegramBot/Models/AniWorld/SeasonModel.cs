@@ -4,6 +4,6 @@
     {
         public int Id { get; set; }
         public int EpisodeCount { get; set; }
-        public List<EpisodeModel> Episodes { get; set; } = new List<EpisodeModel>();
+        public List<EpisodeModel> Episodes { get; set; } = [];
     }
 }

@@ -8,15 +8,9 @@ using AniWorldReminder_TelegramBot.Enums;
 
 namespace AniWorldReminder_TelegramBot.Services
 {
-    public class DBService : IDBService
+    public class DBService(ILogger<DBService> logger) : IDBService
     {
-        private readonly ILogger<DBService> Logger;
         private string? DBConnectionString;
-
-        public DBService(ILogger<DBService> logger)
-        {
-            Logger = logger;
-        }
 
         public async Task<bool> Init()
         {
@@ -24,7 +18,7 @@ namespace AniWorldReminder_TelegramBot.Services
 
             if (settings is null)
             {
-                Logger.LogError(ErrorMessage.ReadSettings);
+                logger.LogError(ErrorMessage.ReadSettings);
                 throw new Exception(ErrorMessage.ReadSettings);
             }
 
@@ -33,7 +27,7 @@ namespace AniWorldReminder_TelegramBot.Services
             if (!await TestDBConnection())
                 return false;
 
-            Logger.LogInformation($"{DateTime.Now} | DB Service initialized");
+            logger.LogInformation($"{DateTime.Now} | DB Service initialized");
 
             return true;
         }
@@ -46,18 +40,18 @@ namespace AniWorldReminder_TelegramBot.Services
                     await connection.OpenAsync();
                 }
 
-                Logger.LogInformation($"{DateTime.Now} | Database reachablility ensured");
+                logger.LogInformation($"{DateTime.Now} | Database reachablility ensured");
 
                 return true;
             }
             catch (MySqlException ex)
             {
-                Logger.LogError($"{DateTime.Now} | DB connection could not be established. Error: " + ex.ToString());
+                logger.LogError($"{DateTime.Now} | DB connection could not be established. Error: " + ex.ToString());
                 return false;
             }
             catch (Exception ex)
             {
-                Logger.LogError($"{DateTime.Now} | {ex}");
+                logger.LogError($"{DateTime.Now} | {ex}");
                 return false;
             }
         }

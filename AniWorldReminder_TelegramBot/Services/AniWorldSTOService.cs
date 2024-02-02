@@ -6,45 +6,33 @@ using System.Net;
 
 namespace AniWorldReminder_TelegramBot.Services
 {
-    public class AniWorldSTOService : IStreamingPortalService
+    public class AniWorldSTOService(ILogger<AniWorldSTOService> logger, Interfaces.IHttpClientFactory httpClientFactory, string baseUrl, string name) : IStreamingPortalService
     {
-        private readonly ILogger<AniWorldSTOService> Logger;
-        private readonly Interfaces.IHttpClientFactory HttpClientFactory;
         private HttpClient? HttpClient;
 
-        public string BaseUrl { get; init; }
-        public string Name { get; init; }
-
-        public AniWorldSTOService(ILogger<AniWorldSTOService> logger, Interfaces.IHttpClientFactory httpClientFactory, string baseUrl, string name)
-        {
-            BaseUrl = baseUrl;
-            Name = name;
-
-            HttpClientFactory = httpClientFactory;
-
-            Logger = logger;
-        }
+        public string BaseUrl { get; init; } = baseUrl;
+        public string Name { get; init; } = name;
 
         public async Task<bool> Init(WebProxy? proxy = null)
         {
             if (proxy is null)
             {
-                HttpClient = HttpClientFactory.CreateHttpClient<AniWorldSTOService>();
+                HttpClient = httpClientFactory.CreateHttpClient<AniWorldSTOService>();
             }
             else
             {
-                HttpClient = HttpClientFactory.CreateHttpClient<AniWorldSTOService>(proxy);
+                HttpClient = httpClientFactory.CreateHttpClient<AniWorldSTOService>(proxy);
             }
 
             (bool success, string? ipv4) = await HttpClient.GetIPv4();
 
             if (!success)
             {
-                Logger.LogError($"{DateTime.Now} | {Name} Service unable to retrieve WAN IP");
+                logger.LogError($"{DateTime.Now} | {Name} Service unable to retrieve WAN IP");
             }
             else
             {
-                Logger.LogInformation($"{DateTime.Now} | {Name} Service initialized with WAN IP {ipv4}");
+                logger.LogInformation($"{DateTime.Now} | {Name} Service initialized with WAN IP {ipv4}");
             }
 
             return success;
@@ -57,7 +45,7 @@ namespace AniWorldReminder_TelegramBot.Services
             if (!reachable)
                 return (false, null);
 
-            if (seriesName.Contains("'"))
+            if (seriesName.Contains('\''))
             {
                 seriesName = seriesName.Split('\'')[0];
             }
@@ -166,7 +154,7 @@ namespace AniWorldReminder_TelegramBot.Services
 
         private async Task<List<SeasonModel>> GetSeasonsAsync(string searchSeriesName, int seasonCount, StreamingPortal streamingPortal)
         {
-            List<SeasonModel> seasons = new();
+            List<SeasonModel> seasons = [];
 
             for (int i = 0; i < seasonCount; i++)
             {
@@ -255,7 +243,7 @@ namespace AniWorldReminder_TelegramBot.Services
             if (episodeNodes is null || episodeNodes.Count == 0)
                 return null;
 
-            List<EpisodeModel> episodes = new();
+            List<EpisodeModel> episodes = [];
 
             int i = 1;
 
@@ -284,7 +272,7 @@ namespace AniWorldReminder_TelegramBot.Services
             return episodes;
         }
 
-        private Language GetEpisodeLanguages(int episode, string html)
+        private static Language GetEpisodeLanguages(int episode, string html)
         {
             HtmlDocument doc = new();
             doc.LoadHtml(html);

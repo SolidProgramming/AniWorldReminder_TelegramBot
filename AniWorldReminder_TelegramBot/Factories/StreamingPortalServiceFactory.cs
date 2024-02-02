@@ -4,7 +4,7 @@ namespace AniWorldReminder_TelegramBot.Factories
 {
     public class StreamingPortalServiceFactory : IStreamingPortalServiceFactory
     {
-        private readonly Dictionary<StreamingPortal, IStreamingPortalService> StreamingPortalServices = new();
+        private readonly Dictionary<StreamingPortal, IStreamingPortalService> StreamingPortalServices = [];
 
         public void AddService(StreamingPortal streamingPortal, IServiceProvider sp)
         {

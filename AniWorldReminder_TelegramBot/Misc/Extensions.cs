@@ -69,7 +69,10 @@ namespace AniWorldReminder_TelegramBot.Misc
                 .Replace("+", "")
                 .Replace(".", "")
                 .Replace("!", "")
-                .Replace("--", "-");
+                .Replace("--", "-")
+                .Replace("ä", "ae")
+                .Replace("ö", "oe")
+                .Replace("ü", "ue");
         }
         public static string? ToLanguageText(this Language languages)
         {
@@ -100,7 +103,7 @@ namespace AniWorldReminder_TelegramBot.Misc
 
             return languageText;
         }
-        public static void AddJobAndTrigger<T>(this IServiceCollectionQuartzConfigurator quartz, int intervalInMinutes) where T : IJob
+        public static IServiceCollectionQuartzConfigurator AddJobAndTrigger<T>(this IServiceCollectionQuartzConfigurator quartz, int intervalInMinutes) where T : IJob
         {
             // Use the name of the IJob as the appsettings.json key
             string jobName = typeof(T).Name;
@@ -112,13 +115,12 @@ namespace AniWorldReminder_TelegramBot.Misc
             JobKey? jobKey = new(jobName);
             quartz.AddJob<T>(opts => opts.WithIdentity(jobKey));
 
-            quartz.AddTrigger(opts => opts
+            return quartz.AddTrigger(opts => opts
                 .ForJob(jobKey)
                 .WithIdentity(jobName + "-trigger")
                 .WithSimpleSchedule(_ =>
                     _.WithIntervalInMinutes(intervalInMinutes)
-                    .RepeatForever())
-                .StartNow());
+                    .RepeatForever()));
         }
         public static bool HasItems<T>(this IEnumerable<T> source) => source != null && source.Any();
         public static async Task<(bool success, string? ipv4)> GetIPv4(this HttpClient httpClient)
@@ -127,13 +129,10 @@ namespace AniWorldReminder_TelegramBot.Misc
 
             return (!string.IsNullOrEmpty(result), result);
         }
-        public static string Concat(this IEnumerable<string> list, char delimeter, bool removeLastChar = true)
-        {
-            return string.Join(delimeter, list);
-        }
+        public static string Concat(this IEnumerable<string> list, char delimeter) => string.Join(delimeter, list);
         public static List<Group>? ToList(this GroupCollection groupCollection, bool removeEmptyGroups = true)
         {
-            List<Group> result = new();
+            List<Group> result = [];
 
             if (!groupCollection.HasItems<Group>())
                 return null;

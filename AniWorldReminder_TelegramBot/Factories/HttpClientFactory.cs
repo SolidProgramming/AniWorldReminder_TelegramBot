@@ -4,7 +4,7 @@ namespace AniWorldReminder_TelegramBot.Factories
 {
     public class HttpClientFactory : Interfaces.IHttpClientFactory
     {
-        private Dictionary<Type, HttpClient> HttpClients = new();
+        private Dictionary<Type, HttpClient> HttpClients = [];
 
         public HttpClient CreateHttpClient<T>(bool defaultRequestHeaders = true)
         {

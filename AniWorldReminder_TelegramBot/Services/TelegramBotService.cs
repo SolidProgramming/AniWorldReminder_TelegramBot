@@ -11,21 +11,11 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace AniWorldReminder_TelegramBot.Services
 {
-    public class TelegramBotService : ITelegramBotService
+    public class TelegramBotService(ILogger<TelegramBotService> logger, IDBService dbService, IStreamingPortalServiceFactory streamingPortalServiceFactory) : ITelegramBotService
     {
-        private readonly ILogger<TelegramBotService> Logger;
         private TelegramBotClient BotClient = default!;
-        private readonly IDBService DBService;
-        private readonly IStreamingPortalService AniWorldService;
-        private readonly IStreamingPortalService STOService;
-
-        public TelegramBotService(ILogger<TelegramBotService> logger, IDBService dbService, IStreamingPortalServiceFactory streamingPortalServiceFactory)
-        {
-            Logger = logger;
-            DBService = dbService;
-            AniWorldService = streamingPortalServiceFactory.GetService(StreamingPortal.AniWorld);
-            STOService = streamingPortalServiceFactory.GetService(StreamingPortal.STO);
-        }
+        private readonly IStreamingPortalService AniWorldService = streamingPortalServiceFactory.GetService(StreamingPortal.AniWorld);
+        private readonly IStreamingPortalService STOService = streamingPortalServiceFactory.GetService(StreamingPortal.STO);
 
         public async Task<bool> Init()
         {
@@ -33,7 +23,7 @@ namespace AniWorldReminder_TelegramBot.Services
 
             if (settings is null)
             {
-                Logger.LogError($"{DateTime.Now} | {ErrorMessage.ReadSettings}");
+                logger.LogError($"{DateTime.Now} | {ErrorMessage.ReadSettings}");
                 return false;
             }
 
@@ -43,13 +33,13 @@ namespace AniWorldReminder_TelegramBot.Services
 
             if (bot_me is null)
             {
-                Logger.LogError($"{DateTime.Now} | {ErrorMessage.RetrieveBotInfo}");
+                logger.LogError($"{DateTime.Now} | {ErrorMessage.RetrieveBotInfo}");
                 return false;
             }
 
             ReceiverOptions? receiverOptions = new()
             {
-                AllowedUpdates = new UpdateType[] { UpdateType.Message } //only receive message updates
+                AllowedUpdates = [UpdateType.Message] //only receive message updates
             };
 
             BotClient.StartReceiving(
@@ -58,7 +48,7 @@ namespace AniWorldReminder_TelegramBot.Services
                 receiverOptions: receiverOptions
             );
 
-            Logger.LogInformation($"{DateTime.Now} | Telegram Bot Service initialized");
+            logger.LogInformation($"{DateTime.Now} | Telegram Bot Service initialized");
 
             return true;
         }
@@ -79,7 +69,7 @@ namespace AniWorldReminder_TelegramBot.Services
 
             if (( DateTime.UtcNow - update.Message.Date ).TotalSeconds > maxSeconds)
             {
-                Logger.LogInformation($"{DateTime.Now} | Received a message older than {maxSeconds} seconds. Message is ignored.");
+                logger.LogInformation($"{DateTime.Now} | Received a message older than {maxSeconds} seconds. Message is ignored.");
                 return;
             }
 
@@ -95,7 +85,7 @@ namespace AniWorldReminder_TelegramBot.Services
                 _ => exception.ToString()
             };
 
-            Logger.LogError($"{DateTime.Now} | {ErrorMessage}");
+            logger.LogError($"{DateTime.Now} | {ErrorMessage}");
 
             return Task.CompletedTask;
         }
@@ -107,7 +97,7 @@ namespace AniWorldReminder_TelegramBot.Services
 
             if (message.Text.IsCommand(out ChatCommand? chatCommand, out string? parameter) && chatCommand is not null)
             {
-                Logger.LogInformation($"{DateTime.Now} | Received a '{chatCommand}' command from ChatId: {message.Chat.Id}.");
+                logger.LogInformation($"{DateTime.Now} | Received a '{chatCommand}' command from ChatId: {message.Chat.Id}.");
 
                 switch (chatCommand)
                 {
@@ -130,7 +120,7 @@ namespace AniWorldReminder_TelegramBot.Services
                 return;
             }
 
-            UserState userState = await DBService.GetUserStateAsync(message.Chat.Id.ToString());
+            UserState userState = await dbService.GetUserStateAsync(message.Chat.Id.ToString());
 
             if (userState == UserState.Undefined)
             {
@@ -175,10 +165,10 @@ namespace AniWorldReminder_TelegramBot.Services
 
             string telegramChatId = message.Chat.Id.ToString();
 
-            UsersModel? user = await DBService.GetUserAsync(telegramChatId);
+            UsersModel? user = await dbService.GetUserAsync(telegramChatId);
 
             if (user is null)
-                await DBService.InsertUserAsync(telegramChatId);
+                await dbService.InsertUserAsync(telegramChatId);
 
             bool useStrictSearch = false;
 
@@ -206,7 +196,7 @@ namespace AniWorldReminder_TelegramBot.Services
             }
             else { return; }
 
-            List<SearchResultModel> allSearchResults = new();
+            List<SearchResultModel> allSearchResults = [];
 
             if (searchResultsAniWorld.HasItems())
                 allSearchResults.AddRange(searchResultsAniWorld);
@@ -218,25 +208,32 @@ namespace AniWorldReminder_TelegramBot.Services
 
             if (allSearchResults.Count > 1)
             {
-                await DBService.UpdateUserStateAsync(telegramChatId, UserState.KeyboardAnswer);
+                await dbService.UpdateUserStateAsync(telegramChatId, UserState.KeyboardAnswer);
                 await SendSearchResult(message, allSearchResults);
                 return;
             }
 
             seriesName = allSearchResults[0].Title.StripHtmlTags().HtmlDecode();
 
-            SeriesModel series = await DBService.GetSeriesAsync(seriesName);
+            SeriesModel series = await dbService.GetSeriesAsync(seriesName);
 
             if (series is null)
                 await InsertSeries(seriesName, streamingPortal);
 
-            UsersSeriesModel? usersSeries = await DBService.GetUsersSeriesAsync(telegramChatId, seriesName);
+            UsersSeriesModel? usersSeries = await dbService.GetUsersSeriesAsync(telegramChatId, seriesName);
 
             string messageText;
 
             if (usersSeries is null)
             {
-                series = await DBService.GetSeriesAsync(seriesName);
+                series = await dbService.GetSeriesAsync(seriesName);
+
+                if (series is null)
+                {
+                    messageText = $"{Emoji.Crossmark} Beim abrufen der Serieninformationen ist ein Fehler aufgetreten.";
+                    await SendMessageAsync(message.Chat.Id, messageText);
+                    return;
+                }
 
                 usersSeries = new()
                 {
@@ -244,7 +241,7 @@ namespace AniWorldReminder_TelegramBot.Services
                     Series = series
                 };
 
-                await DBService.InsertUsersSeriesAsync(usersSeries);
+                await dbService.InsertUsersSeriesAsync(usersSeries);
 
                 messageText = $"{Emoji.Checkmark} Dein Reminder für <b>{seriesName}</b> wurde hinzugefügt.";
 
@@ -264,7 +261,7 @@ namespace AniWorldReminder_TelegramBot.Services
                 await SendMessageAsync(message.Chat.Id, messageText);
             }
 
-            await DBService.UpdateUserStateAsync(telegramChatId, UserState.Undefined);
+            await dbService.UpdateUserStateAsync(telegramChatId, UserState.Undefined);
         }
 
         private async Task InsertSeries(string seriesName, StreamingPortal streamingPortal)
@@ -288,14 +285,14 @@ namespace AniWorldReminder_TelegramBot.Services
             if (seriesInfo is null)
                 return;
 
-            int seriesId = await DBService.InsertSeriesAsync(seriesInfo, streamingPortal);
+            int seriesId = await dbService.InsertSeriesAsync(seriesInfo, streamingPortal);
 
             if (seriesId == -1)
                 return;
 
             foreach (SeasonModel season in seriesInfo.Seasons)
             {
-                await DBService.InsertEpisodesAsync(seriesId, season.Episodes);
+                await dbService.InsertEpisodesAsync(seriesId, season.Episodes);
             }
         }
 
@@ -303,18 +300,18 @@ namespace AniWorldReminder_TelegramBot.Services
         {
             string telegramChatId = message.Chat.Id.ToString();
 
-            UsersSeriesModel? usersSeries = await DBService.GetUsersSeriesAsync(telegramChatId, seriesName);
+            UsersSeriesModel? usersSeries = await dbService.GetUsersSeriesAsync(telegramChatId, seriesName);
 
             string messageText;
 
             if (usersSeries is null)
             {
-                messageText = $"{Emoji.ExclamationmarkRed} Du hast keinen Reminder für diesen Anime {Emoji.ExclamationmarkRed}";
+                messageText = $"{Emoji.ExclamationmarkRed} Du hast keinen Reminder für diese Serie {Emoji.ExclamationmarkRed}";
                 await SendMessageAsync(message.Chat.Id, messageText);
                 return;
             }
 
-            await DBService.DeleteUsersSeriesAsync(usersSeries);
+            await dbService.DeleteUsersSeriesAsync(usersSeries);
 
             messageText = $"{Emoji.Checkmark} Reminder für <b>{seriesName}</b> wurde gelöscht.";
             await SendMessageAsync(message.Chat.Id, messageText);
@@ -324,7 +321,7 @@ namespace AniWorldReminder_TelegramBot.Services
         {
             string telegramChatId = message.Chat.Id.ToString();
 
-            List<UsersSeriesModel>? usersSeries = await DBService.GetUsersSeriesAsync(telegramChatId);
+            List<UsersSeriesModel>? usersSeries = await dbService.GetUsersSeriesAsync(telegramChatId);
 
             if (usersSeries is null || usersSeries.Count == 0)
             {
@@ -352,9 +349,9 @@ namespace AniWorldReminder_TelegramBot.Services
         {
             string telegramChatId = message.Chat.Id.ToString();
 
-            UsersModel? user = await DBService.GetUserAsync(telegramChatId);
+            UsersModel? user = await dbService.GetUserAsync(telegramChatId);
 
-            user ??= await DBService.InsertUserAsync(telegramChatId);
+            user ??= await dbService.InsertUserAsync(telegramChatId);
 
             string messageText;
 
@@ -383,7 +380,7 @@ namespace AniWorldReminder_TelegramBot.Services
                 return;
             }
 
-            await DBService.UpdateVerifyTokenAsync(telegramChatId, token);  
+            await dbService.UpdateVerifyTokenAsync(telegramChatId, token);  
 
             StringBuilder sb = new();
 
@@ -418,8 +415,8 @@ namespace AniWorldReminder_TelegramBot.Services
             {
                 OneTimeKeyboard = true
             };
-            List<KeyboardButton[]>? rows = new();
-            List<KeyboardButton>? cols = new();
+            List<KeyboardButton[]>? rows = [];
+            List<KeyboardButton>? cols = [];
 
             for (int i = 0; i < text.Count; i++)
             {
@@ -430,16 +427,16 @@ namespace AniWorldReminder_TelegramBot.Services
                 if (i % 2 != 0)
                     continue;
 
-                rows.Add(cols.ToArray());
-                cols = new List<KeyboardButton>();
+                rows.Add([.. cols]);
+                cols = [];
             }
 
             if (cols.Count > 0)
             {
-                rows.Add(cols.ToArray());
+                rows.Add([.. cols]);
             }
 
-            rkm.Keyboard = rows.ToArray();
+            rkm.Keyboard = rows;
             return rkm;
         }
 

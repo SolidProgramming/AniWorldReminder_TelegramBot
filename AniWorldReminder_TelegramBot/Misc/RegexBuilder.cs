@@ -13,7 +13,7 @@ namespace AniWorldReminder_TelegramBot.Misc
                  Pattern = "^(?i:/[COMMAND] [PARAM])$|^(?i:/[COMMAND])$"
             };
 
-            List<string> chatCommands = new();
+            List<string> chatCommands = [];
 
             foreach (ChatCommand chatCommand in Enum.GetValues<ChatCommand>())
             {
