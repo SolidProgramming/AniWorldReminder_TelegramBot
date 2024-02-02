@@ -34,11 +34,10 @@ namespace AniWorldReminder_TelegramBot
                 return streamingPortalServiceFactory;
             });
 
-            IServiceCollectionQuartzConfigurator quartz;
-
             builder.Services.AddQuartz(_ =>
             {
-                quartz = _.AddJobAndTrigger<AniWorldSTOJob>(60);
+               _.AddJobAndTrigger<AniWorldSTOJob>(60);
+                _.InterruptJobsOnShutdown = true;
             });
 
             builder.Services.AddQuartzHostedService(_ =>

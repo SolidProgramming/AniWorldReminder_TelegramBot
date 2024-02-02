@@ -30,7 +30,7 @@ namespace AniWorldReminder_TelegramBot.Misc
 
             List<Group>? groupList = match.Groups.ToList(removeEmptyGroups: true);
 
-            if(!groupList.HasItems())
+            if (!groupList.HasItems())
                 return false;
 
             command = match.Groups["COMMAND"].Value.ToChatCommand();
@@ -70,7 +70,7 @@ namespace AniWorldReminder_TelegramBot.Misc
                 .Replace(".", "")
                 .Replace("!", "")
                 .Replace("--", "-")
-                .Replace("ä", "ae")
+                .Replace("ä", "")
                 .Replace("ö", "oe")
                 .Replace("ü", "ue");
         }
@@ -103,7 +103,7 @@ namespace AniWorldReminder_TelegramBot.Misc
 
             return languageText;
         }
-        public static IServiceCollectionQuartzConfigurator AddJobAndTrigger<T>(this IServiceCollectionQuartzConfigurator quartz, int intervalInMinutes) where T : IJob
+        public static void AddJobAndTrigger<T>(this IServiceCollectionQuartzConfigurator quartz, int intervalInMinutes) where T : IJob
         {
             // Use the name of the IJob as the appsettings.json key
             string jobName = typeof(T).Name;
@@ -115,7 +115,7 @@ namespace AniWorldReminder_TelegramBot.Misc
             JobKey? jobKey = new(jobName);
             quartz.AddJob<T>(opts => opts.WithIdentity(jobKey));
 
-            return quartz.AddTrigger(opts => opts
+            quartz.AddTrigger(opts => opts
                 .ForJob(jobKey)
                 .WithIdentity(jobName + "-trigger")
                 .WithSimpleSchedule(_ =>
