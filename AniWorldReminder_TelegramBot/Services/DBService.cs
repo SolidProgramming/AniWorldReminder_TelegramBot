@@ -458,11 +458,11 @@ namespace AniWorldReminder_TelegramBot.Services
 
             await connection.ExecuteAsync(query, parameters);
         }
-        public async Task InsertDownloadAsync(int seriesId, List<EpisodeModel> episodes)
+        public async Task InsertDownloadAsync(int seriesId, int usersId, List<EpisodeModel> episodes)
         {
             using MySqlConnection connection = new(DBConnectionString);
 
-            string query = "INSERT INTO download (SeriesId, Season, Episode, LanguageFlag) VALUES (@SeriesId, @Season, @Episode, @LanguageFlag)";
+            string query = "INSERT INTO download (SeriesId, UsersId ,Season, Episode, LanguageFlag) VALUES (@SeriesId, @UsersId , @Season, @Episode, @LanguageFlag)";
 
             Dictionary<string, object> dictionary;
 
@@ -471,6 +471,7 @@ namespace AniWorldReminder_TelegramBot.Services
                 dictionary = new()
                 {
                     { "@SeriesId",  seriesId},
+                    { "@UsersId",  usersId},
                     { "@Season",  episode.Season},
                     { "@Episode",  episode.Episode},
                     { "@LanguageFlag",  episode.LanguageFlag}

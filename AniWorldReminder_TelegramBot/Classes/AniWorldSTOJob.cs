@@ -1,12 +1,6 @@
-﻿using AniWorldReminder_TelegramBot.Enums;
-using AniWorldReminder_TelegramBot.Misc;
-using AniWorldReminder_TelegramBot.Models;
-using AniWorldReminder_TelegramBot.Models.AniWorld;
-using AniWorldReminder_TelegramBot.Models.DB;
-using Quartz;
+﻿using Quartz;
 using System.Reflection;
 using System.Text;
-using System.Linq;
 
 namespace AniWorldReminder_TelegramBot.Classes
 {
@@ -109,16 +103,11 @@ namespace AniWorldReminder_TelegramBot.Classes
                     Logger.LogInformation($"{DateTime.Now} | Changes found for: {seriesReminder.Series.Name} | {matchingEpisodes.Count}x");
                     await SendNotifications(seriesInfo, group, matchingEpisodes);
 
-                    if (telegramBotSettings is not null && !string.IsNullOrEmpty(telegramBotSettings.AdminChat))
-                    {
-                        if (group.Any(_ => _.User?.TelegramChatId == telegramBotSettings.AdminChat))
-                        {
-                            await DBService.InsertDownloadAsync(seriesReminder.Series.Id, matchingEpisodes);
-                            await TelegramBotService.SendMessageAsync(long.Parse(telegramBotSettings.AdminChat), "Die Folgen wurden in die Download-Datenbank eingetragen.");
-                        }
+                    await DBService.InsertDownloadAsync(seriesReminder.Series.Id, seriesReminder.User.Id, matchingEpisodes);
+                    await TelegramBotService.SendMessageAsync(long.Parse(telegramBotSettings.AdminChat), "Die Folgen wurden in die Download-Datenbank eingetragen.");
 
-                        await SendAdminDownloadNotification(group, matchingEpisodes);
-                    }
+                    await SendAdminDownloadNotification(group, matchingEpisodes);
+
                 }
             }
         }
@@ -172,10 +161,10 @@ namespace AniWorldReminder_TelegramBot.Classes
                 {
                     silentMessage = userWebsiteSettings.TelegramDisableNotifications == 1 ? true : false;
                     noCoverArt = userWebsiteSettings.TelegramNoCoverArtNotifications == 1 ? true : false;
-                }                
+                }
 
                 if (string.IsNullOrEmpty(seriesInfo.CoverArtUrl) || noCoverArt)
-                {                    
+                {
                     await TelegramBotService.SendMessageAsync(Convert.ToInt64(seriesReminder.User.TelegramChatId), messageText, silentMessage: silentMessage, showLinkPreview: !noCoverArt);
                 }
                 else
@@ -222,7 +211,7 @@ namespace AniWorldReminder_TelegramBot.Classes
 
             if (botSettings is null || string.IsNullOrEmpty(botSettings.AdminChat) || string.IsNullOrEmpty(messageText))
                 return;
-                 
+
             StringBuilder sb = new();
 
             sb.AppendLine($"Neue Admin Meldung:\n\n");

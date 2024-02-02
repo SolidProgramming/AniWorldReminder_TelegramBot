@@ -3,6 +3,8 @@ global using AniWorldReminder_TelegramBot.Classes;
 global using AniWorldReminder_TelegramBot.Models;
 global using AniWorldReminder_TelegramBot.Misc;
 global using AniWorldReminder_TelegramBot.Enums;
+global using AniWorldReminder_TelegramBot.Models.AniWorld;
+global using AniWorldReminder_TelegramBot.Models.DB;
 global using Emoji = AniWorldReminder_TelegramBot.Misc.Emoji;
 global using MethodTimer;
 using AniWorldReminder_TelegramBot.Services;
