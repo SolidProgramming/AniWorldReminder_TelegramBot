@@ -219,8 +219,6 @@ namespace AniWorldReminder_TelegramBot.Classes
             if (seriesReminder is null || seriesReminder.Series is null || string.IsNullOrEmpty(seriesReminder.Series.Name) || seriesReminder.Series.StreamingPortal is null || string.IsNullOrEmpty(seriesReminder.Series.StreamingPortal.Name))
                 return (false, null, null, null, null);
 
-            //(int _, int _) = await dbService.GetSeriesSeasonEpisodeCountAsync(seriesReminder.Series.Id);
-
             IStreamingPortalService streamingPortalService;
             StreamingPortal streamingPortal = StreamingPortalHelper.GetStreamingPortalByName(seriesReminder.Series.StreamingPortal.Name!);
 

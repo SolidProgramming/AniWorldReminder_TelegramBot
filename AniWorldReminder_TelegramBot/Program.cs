@@ -36,7 +36,7 @@ namespace AniWorldReminder_TelegramBot
 
             builder.Services.AddQuartz(_ =>
             {
-               _.AddJobAndTrigger<AniWorldSTOJob>(60);
+                _.AddJobAndTrigger<AniWorldSTOJob>(60);
                 _.InterruptJobsOnShutdown = true;
             });
 

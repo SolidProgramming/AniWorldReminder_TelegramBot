@@ -1,7 +1,4 @@
-﻿using AniWorldReminder_TelegramBot.Misc;
-using AniWorldReminder_TelegramBot.Models.AniWorld;
-using AniWorldReminder_TelegramBot.Models.DB;
-using System.Text;
+﻿using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
