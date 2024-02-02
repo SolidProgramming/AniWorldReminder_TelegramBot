@@ -513,7 +513,7 @@ namespace AniWorldReminder_TelegramBot.Services
                 "LEFT JOIN users ON users_settings.UserId = users.id " +
                 "WHERE users.TelegramChatId = @TelegramChatId";
 
-            return await connection.QuerySingleOrDefaultAsync<UserWebsiteSettings>(query, parameters);
+            return await connection.QueryFirstOrDefaultAsync<UserWebsiteSettings>(query, parameters);
         }
     }
 }
