@@ -1,4 +1,6 @@
 ﻿using Quartz;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 
@@ -77,9 +79,17 @@ namespace AniWorldReminder_TelegramBot.Classes
                     await dbService.InsertEpisodesAsync(seriesReminder.Series.Id, newEpisodes);
                     await dbService.UpdateSeriesInfoAsync(seriesReminder.Series.Id, seriesInfo);
 
-                    if (newEpisodes.Any(_ => _.LanguageFlag.HasFlag(seriesReminder.Language)))
+                    foreach (EpisodeModel newEpisode in newEpisodes)
                     {
-                        matchingEpisodes.AddRange(newEpisodes.Where(_ => _.LanguageFlag.HasFlag(seriesReminder.Language)));
+                        IEnumerable<Language>? flagsNewEp = newEpisode.LanguageFlag.GetFlags<Language>(ignore: Language.None);
+                        IEnumerable<Language>? flagsReminder = seriesReminder.Language.GetFlags<Language>(ignore: Language.None);
+
+                        if (flagsNewEp.Any(_ => flagsReminder.Contains(_)))
+                        {
+                            IEnumerable<Language>? wantedLanguages = flagsNewEp.Intersect(flagsReminder);
+
+                            matchingEpisodes.Add(newEpisode);
+                        }
                     }
 
                     string messageText = $"Es wurden neue Episoden für <b>{seriesReminder.Series.Name}</b> gefunden und hinzugefügt!";
@@ -99,6 +109,8 @@ namespace AniWorldReminder_TelegramBot.Classes
                 }
             }
         }
+
+        
 
         private async Task SendNotifications(SeriesInfoModel seriesInfo, IGrouping<int, SeriesReminderModel> seriesGroup, List<EpisodeModel> newEpisodes)
         {
