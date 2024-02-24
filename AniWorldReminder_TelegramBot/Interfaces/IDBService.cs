@@ -18,6 +18,7 @@ namespace AniWorldReminder_TelegramBot.Interfaces
         Task InsertUsersSeriesAsync(DBModels.UsersSeriesModel usersSeries);
         Task DeleteUsersSeriesAsync(DBModels.UsersSeriesModel usersSeries);
         Task UpdateSeriesInfoAsync(int seriesId, AniWorldModels.SeriesInfoModel seriesInfo);
+        Task UpdateSeriesPathAsync(int seriesId, AniWorldModels.SeriesInfoModel seriesInfo);
         Task<List<EpisodeModel>?> GetSeriesSeasonEpisodesAsync(int seriesId, int season);
         Task InsertEpisodesAsync(int seriesId, List<EpisodeModel> episodes);
         Task<List<EpisodeModel>?> GetSeriesEpisodesAsync(int seriesId);

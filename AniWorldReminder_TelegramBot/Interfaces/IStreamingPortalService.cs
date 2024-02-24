@@ -9,7 +9,7 @@ namespace AniWorldReminder_TelegramBot.Interfaces
         string Name { get; init; }
         Task<bool> Init(WebProxy? proxy = null);
         Task<(bool success, List<SearchResultModel>? searchResults)> GetSeriesAsync(string seriesName, bool strictSearch = false);
-        Task<SeriesInfoModel?> GetSeriesInfoAsync(string seriesName, StreamingPortal streamingPortal);
+        Task<SeriesInfoModel?> GetSeriesInfoAsync(string seriesPath, StreamingPortal streamingPortal);
         HttpClient GetHttpClient();
     }
 }

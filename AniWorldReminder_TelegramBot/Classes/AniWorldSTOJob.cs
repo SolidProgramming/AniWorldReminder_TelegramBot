@@ -101,7 +101,11 @@ namespace AniWorldReminder_TelegramBot.Classes
                     logger.LogInformation($"{DateTime.Now} | Changes found for: {seriesReminder.Series.Name} | {matchingEpisodes.Count}x");
                     await SendNotifications(seriesInfo, group, matchingEpisodes);
 
-                    await dbService.InsertDownloadAsync(seriesReminder.Series.Id, seriesReminder.User.Id, matchingEpisodes);
+                    foreach (SeriesReminderModel reminder in group)
+                    {
+                        await dbService.InsertDownloadAsync(reminder.Series.Id, reminder.User.Id, matchingEpisodes);
+                    }
+                    
                     await telegramBotService.SendMessageAsync(long.Parse(telegramBotSettings.AdminChat), "Die Folgen wurden in die Download-Datenbank eingetragen.");
 
                     await SendAdminDownloadNotification(group, matchingEpisodes);
@@ -248,11 +252,14 @@ namespace AniWorldReminder_TelegramBot.Classes
                     return (false, null, null, null, null);
             }
 
-            SeriesInfoModel? seriesInfo = await streamingPortalService.GetSeriesInfoAsync(seriesReminder.Series.Name, streamingPortal);
+            SeriesInfoModel? seriesInfo = await streamingPortalService.GetSeriesInfoAsync(seriesReminder.Series.Path, streamingPortal);
 
             if (seriesInfo is null)
+            {
+                //seriesInfo = await streamingPortalService.GetSeriesInfoAsync(seriesReminder.Series.Name.UrlSanitize().ToLower(), streamingPortal);
+                //await dbService.UpdateSeriesPathAsync(seriesReminder.Series.Id, seriesInfo);
                 return (false, null, null, null, null);
-
+            }
 
             if (seriesInfo.Seasons is null || seriesInfo.Seasons.Count == 0)
             {

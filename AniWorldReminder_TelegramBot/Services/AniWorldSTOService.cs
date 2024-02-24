@@ -3,6 +3,8 @@ using System.Text;
 using HtmlAgilityPack;
 using System.Text.RegularExpressions;
 using System.Net;
+using AniWorldReminder_TelegramBot.Enums;
+using Org.BouncyCastle.Tls;
 
 namespace AniWorldReminder_TelegramBot.Services
 {
@@ -92,19 +94,17 @@ namespace AniWorldReminder_TelegramBot.Services
             }
         }
 
-        public async Task<SeriesInfoModel?> GetSeriesInfoAsync(string seriesName, StreamingPortal streamingPortal)
+        public async Task<SeriesInfoModel?> GetSeriesInfoAsync(string seriesPath, StreamingPortal streamingPortal)
         {
-            string searchSeriesName = seriesName.UrlSanitize();
-
             string seriesUrl;
 
             switch (streamingPortal)
             {
                 case StreamingPortal.STO:
-                    seriesUrl = $"{BaseUrl}/serie/stream/{searchSeriesName}";
+                    seriesUrl = $"{BaseUrl}/serie/stream/{seriesPath}";
                     break;
                 case StreamingPortal.AniWorld:
-                    seriesUrl = $"{BaseUrl}/anime/stream/{searchSeriesName}";
+                    seriesUrl = $"{BaseUrl}/anime/stream/{seriesPath}";
                     break;
                 default:
                     return null;
@@ -130,18 +130,23 @@ namespace AniWorldReminder_TelegramBot.Services
             if (!int.TryParse(seriesInfoNode[0].InnerText, out int seasonCount))
                 return null;
 
+            HtmlNode? titleNode = new HtmlNodeQueryBuilder()
+                .Query(doc)
+                    .GetNodesByQuery("//div[@class='series-title']/h1/span")
+                        .FirstOrDefault();
 
             SeriesInfoModel seriesInfo = new()
             {
-                Name = seriesName,
+                Name = titleNode?.InnerHtml,
                 SeasonCount = seasonCount,
                 CoverArtUrl = GetCoverArtUrl(doc),
-                Seasons = await GetSeasonsAsync(searchSeriesName, seasonCount, streamingPortal)
+                Seasons = await GetSeasonsAsync(seriesPath, seasonCount, streamingPortal),
+                Path = seriesPath
             };
 
             foreach (SeasonModel season in seriesInfo.Seasons)
             {
-                List<EpisodeModel>? episodes = await GetSeasonEpisodesAsync(searchSeriesName, season.Id, streamingPortal);
+                List<EpisodeModel>? episodes = await GetSeasonEpisodesAsync(seriesPath, season.Id, streamingPortal);
 
                 if (episodes is null || episodes.Count == 0)
                     continue;
@@ -152,7 +157,7 @@ namespace AniWorldReminder_TelegramBot.Services
             return seriesInfo;
         }
 
-        private async Task<List<SeasonModel>> GetSeasonsAsync(string searchSeriesName, int seasonCount, StreamingPortal streamingPortal)
+        private async Task<List<SeasonModel>> GetSeasonsAsync(string seriesPath, int seasonCount, StreamingPortal streamingPortal)
         {
             List<SeasonModel> seasons = [];
 
@@ -163,10 +168,10 @@ namespace AniWorldReminder_TelegramBot.Services
                 switch (streamingPortal)
                 {
                     case StreamingPortal.STO:
-                        seasonUrl = $"{BaseUrl}/serie/stream/{searchSeriesName}/staffel-{i + 1}";
+                        seasonUrl = $"{BaseUrl}/serie/stream/{seriesPath}/staffel-{i + 1}";
                         break;
                     case StreamingPortal.AniWorld:
-                        seasonUrl = $"{BaseUrl}/anime/stream/{searchSeriesName}/staffel-{i + 1}";
+                        seasonUrl = $"{BaseUrl}/anime/stream/{seriesPath}/staffel-{i + 1}";
                         break;
                     default:
                         return null;
@@ -207,17 +212,17 @@ namespace AniWorldReminder_TelegramBot.Services
             return seasons;
         }
 
-        private async Task<List<EpisodeModel>?> GetSeasonEpisodesAsync(string seriesName, int season, StreamingPortal streamingPortal)
+        private async Task<List<EpisodeModel>?> GetSeasonEpisodesAsync(string seriesPath, int season, StreamingPortal streamingPortal)
         {
             string seasonUrl;
 
             switch (streamingPortal)
             {
                 case StreamingPortal.STO:
-                    seasonUrl = $"{BaseUrl}/serie/stream/{seriesName}/staffel-{season}";
+                    seasonUrl = $"{BaseUrl}/serie/stream/{seriesPath}/staffel-{season}";
                     break;
                 case StreamingPortal.AniWorld:
-                    seasonUrl = $"{BaseUrl}/anime/stream/{seriesName}/staffel-{season}";
+                    seasonUrl = $"{BaseUrl}/anime/stream/{seriesPath}/staffel-{season}";
                     break;
                 default:
                     return null;

@@ -283,6 +283,24 @@ namespace AniWorldReminder_TelegramBot.Services
 
             await connection.ExecuteAsync(query, parameters);
         }
+        public async Task UpdateSeriesPathAsync(int seriesId, AniWorldModels.SeriesInfoModel seriesInfo)
+        {
+            using MySqlConnection connection = new(DBConnectionString);
+
+            string query = "UPDATE series " +
+                            "SET series.Path = @SeriesPath " +
+                            "WHERE series.id = @id ";
+
+            Dictionary<string, object> dictionary = new()
+            {
+                { "@id", seriesId },
+                { "@SeriesPath", seriesInfo.Path },
+            };
+
+            DynamicParameters parameters = new(dictionary);
+
+            await connection.ExecuteAsync(query, parameters);
+        }
         public async Task<List<DBModels.SeriesReminderModel>?> GetUsersReminderSeriesAsync()
         {
             using MySqlConnection connection = new(DBConnectionString);
