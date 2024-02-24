@@ -1,4 +1,6 @@
-﻿using Quartz;
+﻿using AniWorldReminder_TelegramBot.Enums;
+using AniWorldReminder_TelegramBot.Interfaces;
+using Quartz;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -33,6 +35,7 @@ namespace AniWorldReminder_TelegramBot.Classes
             if (userReminderSeries is null)
                 return;
 
+
             TelegramBotSettingsModel? telegramBotSettings = SettingsHelper.ReadSettings<TelegramBotSettingsModel>();
 
             IEnumerable<IGrouping<int, SeriesReminderModel>>? userReminderSeriesGroups = userReminderSeries.GroupBy(_ => _.Series!.Id);
@@ -45,7 +48,7 @@ namespace AniWorldReminder_TelegramBot.Classes
                     continue;
 
                 logger.LogInformation($"{DateTime.Now} | Scanning for changes: {seriesReminder.Series.Name}");
-
+                               
                 (bool updateAvailable, SeriesInfoModel? seriesInfo, List<EpisodeModel>? languageUpdateEpisodes, List<EpisodeModel>? newEpisodes, List<EpisodeModel>? namesUpdatedEpisodes) = await UpdateNeeded(seriesReminder);
 
                 if (!updateAvailable || seriesInfo is null)

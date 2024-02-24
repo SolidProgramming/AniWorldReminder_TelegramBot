@@ -141,8 +141,18 @@ namespace AniWorldReminder_TelegramBot.Services
                 SeasonCount = seasonCount,
                 CoverArtUrl = GetCoverArtUrl(doc),
                 Seasons = await GetSeasonsAsync(seriesPath, seasonCount, streamingPortal),
-                Path = seriesPath
+                Path = $"/{seriesPath.TrimStart('/')}",
             };
+
+            if (!string.IsNullOrEmpty(seriesInfo.CoverArtUrl))
+            {
+                byte[]? imageBytes = await HttpClient.GetByteArrayAsync(seriesInfo.CoverArtUrl);
+
+                if (imageBytes.Length > 0)
+                {
+                    seriesInfo.CoverArtBase64 = "data:image/png;base64, " + Convert.ToBase64String(imageBytes);
+                }
+            }
 
             foreach (SeasonModel season in seriesInfo.Seasons)
             {
