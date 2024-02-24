@@ -158,107 +158,113 @@ namespace AniWorldReminder_TelegramBot.Services
             if (string.IsNullOrEmpty(seriesName))
                 return;
 
-            await SendChatAction(message.Chat.Id, ChatAction.Typing);
+            await SendMessageAsync(message.Chat.Id, "Dieses Command wird nicht mehr unterstützt. Bitte verwende die Webseite zum hinzufügen von Remindern.");
 
-            string telegramChatId = message.Chat.Id.ToString();
+            return;
 
-            UsersModel? user = await dbService.GetUserAsync(telegramChatId);
+            #region old reminder code
+            //await SendChatAction(message.Chat.Id, ChatAction.Typing);
 
-            if (user is null)
-                await dbService.InsertUserAsync(telegramChatId);
+            //string telegramChatId = message.Chat.Id.ToString();
 
-            bool useStrictSearch = false;
+            //UsersModel? user = await dbService.GetUserAsync(telegramChatId);
 
-            if (userState == UserState.KeyboardAnswer)
-                useStrictSearch = true;
+            //if (user is null)
+            //    await dbService.InsertUserAsync(telegramChatId);
 
-            (bool successAniWorld, List<SearchResultModel>? searchResultsAniWorld) = await AniWorldService.GetSeriesAsync(seriesName, useStrictSearch);
-            (bool successSTO, List<SearchResultModel>? searchResultsSTO) = await STOService.GetSeriesAsync(seriesName, useStrictSearch);
+            //bool useStrictSearch = false;
 
-            if (( !successAniWorld && !successSTO ) || ( !searchResultsAniWorld.HasItems() && !searchResultsSTO.HasItems() ))
-            {
-                await SendMessageAsync(message.Chat.Id, "Es wurden keine passenden Treffer gefunden.");
-                return;
-            }
+            //if (userState == UserState.KeyboardAnswer)
+            //    useStrictSearch = true;
 
-            StreamingPortal streamingPortal;
+            //(bool successAniWorld, List<SearchResultModel>? searchResultsAniWorld) = await AniWorldService.GetSeriesAsync(seriesName, useStrictSearch);
+            //(bool successSTO, List<SearchResultModel>? searchResultsSTO) = await STOService.GetSeriesAsync(seriesName, useStrictSearch);
 
-            if (successAniWorld)
-            {
-                streamingPortal = StreamingPortal.AniWorld;
-            }
-            else if (successSTO)
-            {
-                streamingPortal = StreamingPortal.STO;
-            }
-            else { return; }
+            //if (( !successAniWorld && !successSTO ) || ( !searchResultsAniWorld.HasItems() && !searchResultsSTO.HasItems() ))
+            //{
+            //    await SendMessageAsync(message.Chat.Id, "Es wurden keine passenden Treffer gefunden.");
+            //    return;
+            //}
 
-            List<SearchResultModel> allSearchResults = [];
+            //StreamingPortal streamingPortal;
 
-            if (searchResultsAniWorld.HasItems())
-                allSearchResults.AddRange(searchResultsAniWorld);
+            //if (successAniWorld)
+            //{
+            //    streamingPortal = StreamingPortal.AniWorld;
+            //}
+            //else if (successSTO)
+            //{
+            //    streamingPortal = StreamingPortal.STO;
+            //}
+            //else { return; }
 
-            if (searchResultsSTO.HasItems())
-                allSearchResults.AddRange(searchResultsSTO);
+            //List<SearchResultModel> allSearchResults = [];
 
-            allSearchResults = allSearchResults.DistinctBy(_ => _.Title).ToList();
+            //if (searchResultsAniWorld.HasItems())
+            //    allSearchResults.AddRange(searchResultsAniWorld);
 
-            if (allSearchResults.Count > 1)
-            {
-                await dbService.UpdateUserStateAsync(telegramChatId, UserState.KeyboardAnswer);
-                await SendSearchResult(message, allSearchResults);
-                return;
-            }
+            //if (searchResultsSTO.HasItems())
+            //    allSearchResults.AddRange(searchResultsSTO);
 
-            seriesName = allSearchResults[0].Title.StripHtmlTags().HtmlDecode();
+            //allSearchResults = allSearchResults.DistinctBy(_ => _.Title).ToList();
 
-            SeriesModel series = await dbService.GetSeriesAsync(seriesName);
+            //if (allSearchResults.Count > 1)
+            //{
+            //    await dbService.UpdateUserStateAsync(telegramChatId, UserState.KeyboardAnswer);
+            //    await SendSearchResult(message, allSearchResults);
+            //    return;
+            //}
 
-            if (series is null)
-                await InsertSeries(seriesName, streamingPortal);
+            //seriesName = allSearchResults[0].Title.StripHtmlTags().HtmlDecode();
 
-            UsersSeriesModel? usersSeries = await dbService.GetUsersSeriesAsync(telegramChatId, seriesName);
+            //SeriesModel series = await dbService.GetSeriesAsync(seriesName);
 
-            string messageText;
+            //if (series is null)
+            //    await InsertSeries(seriesName, streamingPortal);
 
-            if (usersSeries is null)
-            {
-                series = await dbService.GetSeriesAsync(seriesName);
+            //UsersSeriesModel? usersSeries = await dbService.GetUsersSeriesAsync(telegramChatId, seriesName);
 
-                if (series is null)
-                {
-                    messageText = $"{Emoji.Crossmark} Beim abrufen der Serieninformationen ist ein Fehler aufgetreten.";
-                    await SendMessageAsync(message.Chat.Id, messageText);
-                    return;
-                }
+            //string messageText;
 
-                usersSeries = new()
-                {
-                    Users = user,
-                    Series = series
-                };
+            //if (usersSeries is null)
+            //{
+            //    series = await dbService.GetSeriesAsync(seriesName);
 
-                await dbService.InsertUsersSeriesAsync(usersSeries);
+            //    if (series is null)
+            //    {
+            //        messageText = $"{Emoji.Crossmark} Beim abrufen der Serieninformationen ist ein Fehler aufgetreten.";
+            //        await SendMessageAsync(message.Chat.Id, messageText);
+            //        return;
+            //    }
 
-                messageText = $"{Emoji.Checkmark} Dein Reminder für <b>{seriesName}</b> wurde hinzugefügt.";
+            //    usersSeries = new()
+            //    {
+            //        Users = user,
+            //        Series = series
+            //    };
 
-                if (string.IsNullOrEmpty(series.CoverArtUrl))
-                {
-                    await SendMessageAsync(Convert.ToInt64(telegramChatId), messageText);
-                }
-                else
-                {
-                    await SendPhotoAsync(Convert.ToInt64(telegramChatId), series.CoverArtUrl, messageText);
-                }
-            }
-            else
-            {
-                messageText = $"{Emoji.ExclamationmarkRed} Es existiert bereits ein Reminder für <b>{seriesName}</b> {Emoji.ExclamationmarkRed}";
+            //    await dbService.InsertUsersSeriesAsync(usersSeries);
 
-                await SendMessageAsync(message.Chat.Id, messageText);
-            }
+            //    messageText = $"{Emoji.Checkmark} Dein Reminder für <b>{seriesName}</b> wurde hinzugefügt.";
 
-            await dbService.UpdateUserStateAsync(telegramChatId, UserState.Undefined);
+            //    if (string.IsNullOrEmpty(series.CoverArtUrl))
+            //    {
+            //        await SendMessageAsync(Convert.ToInt64(telegramChatId), messageText);
+            //    }
+            //    else
+            //    {
+            //        await SendPhotoAsync(Convert.ToInt64(telegramChatId), series.CoverArtUrl, messageText);
+            //    }
+            //}
+            //else
+            //{
+            //    messageText = $"{Emoji.ExclamationmarkRed} Es existiert bereits ein Reminder für <b>{seriesName}</b> {Emoji.ExclamationmarkRed}";
+
+            //    await SendMessageAsync(message.Chat.Id, messageText);
+            //}
+
+            //await dbService.UpdateUserStateAsync(telegramChatId, UserState.Undefined);
+            #endregion old reminder code
         }
 
         private async Task InsertSeries(string seriesName, StreamingPortal streamingPortal)
