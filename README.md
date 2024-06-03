@@ -34,7 +34,7 @@ You need to get a Proxy if you don't want to get Captcha blocked. [Webshare](htt
 ### Database
 Create the Database. Sql query download: [SQL](https://reducemy.link/p/4WRCDq)
 
-## Add a new Hoster
+## Add your custom Hoster
 
 ### Add a Hoster to Enums.StreamingPortal
 ```C#
