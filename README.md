@@ -32,7 +32,7 @@ You need to get a Proxy if you don't want to get Captcha blocked. [Webshare](htt
 ```
 
 ### Database
-Create the Database. Sql query download: [SQL](https://reducemy.link/p/4WRCDq)
+Create the Database. Sql query to create the db: [SQL](https://reducemy.link/p/4WRCGp)
 
 ## Add your custom Hoster
 
