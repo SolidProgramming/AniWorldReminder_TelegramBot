@@ -12,7 +12,8 @@ You need to get a Proxy if you don't want to get Captcha blocked. [Webshare](htt
 ```
 {
   "TelegramBot": {
-    "Token": "MYTOKEN"
+    "Token": "MYTOKEN",
+    "AdminChat": "1234567"
   },
   "Database": {
     "IP": "XXX.XXX.XXX.XXX",
@@ -20,6 +21,7 @@ You need to get a Proxy if you don't want to get Captcha blocked. [Webshare](htt
     "Username": "user",
     "Password": "myPassword"
   },
+  "UseProxy": false,
   "Proxy": {
     "URI": "https://myproxy",
     "Username": "username",
