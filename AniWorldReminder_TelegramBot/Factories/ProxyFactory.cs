@@ -12,7 +12,7 @@ namespace AniWorldReminder_TelegramBot.Factories
             return new WebProxy()
             {
                 Address = new Uri(proxyAccount.Uri),
-                BypassProxyOnLocal = false,
+                BypassProxyOnLocal = true,
                 UseDefaultCredentials = false,
                 Credentials = new NetworkCredential(proxyAccount.Username, proxyAccount.Password)
             };

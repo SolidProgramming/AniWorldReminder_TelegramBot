@@ -387,7 +387,7 @@ namespace AniWorldReminder_TelegramBot.Services
 
             StringBuilder sb = new();
 
-            const string website = "https://aniworldweb.solidserver.xyz/verify";
+            const string website = "https://proxymov.xyz/verify";
 
             sb.AppendLine($"{Emoji.Confetti} <b>Deine Daten zum Verifikationsprozesses:</b> {Emoji.Confetti}\n");
             sb.AppendLine($"{Emoji.Checkmark} Token: <b>{token}</b>\n");
