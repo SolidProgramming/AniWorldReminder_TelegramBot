@@ -12,7 +12,8 @@ You need to get a Proxy if you don't want to get Captcha blocked. [Webshare](htt
 ```
 {
   "TelegramBot": {
-    "Token": "MYTOKEN"
+    "Token": "MYTOKEN",
+    "AdminChat": "1234567"
   },
   "Database": {
     "IP": "XXX.XXX.XXX.XXX",
@@ -20,6 +21,7 @@ You need to get a Proxy if you don't want to get Captcha blocked. [Webshare](htt
     "Username": "user",
     "Password": "myPassword"
   },
+  "UseProxy": false,
   "Proxy": {
     "URI": "https://myproxy",
     "Username": "username",
@@ -30,9 +32,9 @@ You need to get a Proxy if you don't want to get Captcha blocked. [Webshare](htt
 ```
 
 ### Database
-Create the Database. Sql query download: [SQL](https://reducemy.link/p/4WRCDq)
+Create the Database. SQL query to create the Database: [SQL](https://reducemy.link/p/4WRCGp)
 
-## Add a new Hoster
+## Add your custom Hoster
 
 ### Add a Hoster to Enums.StreamingPortal
 ```C#
