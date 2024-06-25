@@ -1,7 +1,4 @@
-﻿using AniWorldReminder_TelegramBot.Enums;
-using AniWorldReminder_TelegramBot.Interfaces;
-using Quartz;
-using System.Collections.Generic;
+﻿using Quartz;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -68,11 +65,24 @@ namespace AniWorldReminder_TelegramBot.Classes
                 {
                     await dbService.UpdateEpisodesAsync(seriesReminder.Series.Id, languageUpdateEpisodes);
 
-                    if (languageUpdateEpisodes.Any(_ => _.LanguageFlag.HasFlag(seriesReminder.Language)))
-                    {
-                        matchingEpisodes.AddRange(languageUpdateEpisodes.Where(_ => _.LanguageFlag.HasFlag(seriesReminder.Language)));
-                    }
+                    foreach (EpisodeModel newEpisode in languageUpdateEpisodes)
+                    {                       
+                        IEnumerable<Language>? flagsReminder = seriesReminder.Language.GetFlags<Language>(ignore: Language.None);
 
+                        if (newEpisode.UpdatedLanguageFlags.Any(_ => flagsReminder.Contains(_)))
+                        {
+                            IEnumerable<Language>? wantedLanguages = flagsReminder.Intersect(newEpisode.UpdatedLanguageFlags);
+
+                            newEpisode.LanguageFlag = Language.None;
+
+                            foreach (Language language in wantedLanguages)
+                            {
+                                newEpisode.LanguageFlag |= language;
+                            }
+
+                            matchingEpisodes.Add(newEpisode);
+                        }
+                    }
                     string messageText = $"Es wurden folgende Episoden für <b>{seriesReminder.Series.Name}</b> mit <b>Sprach-Updates</b> gefunden und geupdated!";
                     await SendAdminNotification(languageUpdateEpisodes, messageText);
                 }
@@ -322,7 +332,13 @@ namespace AniWorldReminder_TelegramBot.Classes
                 if (epNeedUpdate is null)
                     continue;
 
-                epNeedUpdate.LanguageFlag = episode.LanguageFlag;
+                IEnumerable<Language>? flagsNewEp = episode.LanguageFlag.GetFlags<Language>(ignore: Language.None);
+                IEnumerable<Language>? flagsReminder = epNeedUpdate.LanguageFlag.GetFlags<Language>(ignore: Language.None);
+
+                IEnumerable<Language>? wantedLanguages = flagsNewEp.Except(flagsReminder);
+
+                epNeedUpdate.UpdatedLanguageFlags = wantedLanguages;
+                epNeedUpdate.LanguageFlag = episode.LanguageFlag;                
 
                 updateEpisodes.Add(epNeedUpdate);
             }

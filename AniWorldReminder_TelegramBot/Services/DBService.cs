@@ -475,7 +475,7 @@ namespace AniWorldReminder_TelegramBot.Services
         {
             using MySqlConnection connection = new(DBConnectionString);
 
-            string query = "INSERT INTO download (SeriesId, UsersId ,Season, Episode, LanguageFlag) VALUES (@SeriesId, @UsersId , @Season, @Episode, @LanguageFlag)";
+            string query = "INSERT INTO download (SeriesId, UsersId, Season, Episode, LanguageFlag) VALUES (@SeriesId, @UsersId, @Season, @Episode, @LanguageFlag)";
 
             Dictionary<string, object> dictionary;
 

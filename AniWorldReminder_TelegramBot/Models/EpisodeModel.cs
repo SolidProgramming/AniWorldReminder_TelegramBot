@@ -10,5 +10,6 @@ namespace AniWorldReminder_TelegramBot.Models
         public int Episode { get; set; }
         public string? Name { get; set; }
         public Language LanguageFlag { get; set; }
+        public IEnumerable<Language> UpdatedLanguageFlags { get; set; }
     }
 }
