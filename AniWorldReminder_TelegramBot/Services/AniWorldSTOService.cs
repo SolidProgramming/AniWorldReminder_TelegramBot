@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using System.Net;
 using AniWorldReminder_TelegramBot.Enums;
 using Org.BouncyCastle.Tls;
+using Newtonsoft.Json;
 
 namespace AniWorldReminder_TelegramBot.Services
 {
@@ -135,24 +136,16 @@ namespace AniWorldReminder_TelegramBot.Services
                     .GetNodesByQuery("//div[@class='series-title']/h1/span")
                         .FirstOrDefault();
 
+            string seriesName = titleNode?.InnerHtml.HtmlDecode();
+
             SeriesInfoModel seriesInfo = new()
             {
-                Name = titleNode?.InnerHtml,
+                Name = seriesName,
                 SeasonCount = seasonCount,
-                CoverArtUrl = GetCoverArtUrl(doc),
+                CoverArtUrl = await GetCoverArtData(seriesName, doc, streamingPortal),
                 Seasons = await GetSeasonsAsync(seriesPath, seasonCount, streamingPortal),
                 Path = $"/{seriesPath.TrimStart('/')}",
             };
-
-            if (!string.IsNullOrEmpty(seriesInfo.CoverArtUrl))
-            {
-                byte[]? imageBytes = await HttpClient.GetByteArrayAsync(seriesInfo.CoverArtUrl);
-
-                if (imageBytes.Length > 0)
-                {
-                    seriesInfo.CoverArtBase64 = "data:image/png;base64, " + Convert.ToBase64String(imageBytes);
-                }
-            }
 
             foreach (SeasonModel season in seriesInfo.Seasons)
             {
@@ -165,6 +158,64 @@ namespace AniWorldReminder_TelegramBot.Services
             }
 
             return seriesInfo;
+        }
+
+        private async Task<string?> GetCoverArtData(string seriesName, HtmlDocument doc, StreamingPortal streamingPortal)
+        {
+            if (streamingPortal == StreamingPortal.AniWorld)
+            {
+                string? query = AniListAPIQuery.GetQuery(AniListAPIQueryType.SearchMedia, seriesName);
+
+                if (string.IsNullOrEmpty(query))
+                    return null;
+
+                using StringContent postData = new(query, Encoding.UTF8, "application/json");
+                HttpResponseMessage? respAniList = await HttpClient.PostAsync(new Uri(AniListAPIQuery.Uri), postData);
+
+                string aniListResponse = await respAniList.Content.ReadAsStringAsync();
+                AniListSearchMediaModel? aniListSearch = JsonConvert.DeserializeObject<AniListSearchMediaModel>(aniListResponse);
+
+                if (aniListSearch?.Data.Page.Media.Count > 0)
+                {
+                    Medium? medium = aniListSearch.Data.Page.Media.FirstOrDefault(_ => _.Title.UserPreferred.Contains(seriesName) || _.Title.English.Contains(seriesName));
+
+                    if (medium == null)
+                        return aniListSearch.Data.Page.Media.FirstOrDefault()?.CoverImage.Large;
+
+                    return medium.CoverImage.Large;
+                }
+                else
+                {
+                    string? coverArtUrl = GetCoverArtUrl(doc);
+
+                    if (string.IsNullOrEmpty(coverArtUrl))
+                        return null;
+
+                    return await GetCoverArtBase64(coverArtUrl);
+                }
+            }
+            else
+            {
+                string? coverArtUrl = GetCoverArtUrl(doc);
+
+                if (string.IsNullOrEmpty(coverArtUrl))
+                    return null;
+
+                return await GetCoverArtBase64(coverArtUrl);
+            }
+        }
+        private async Task<string?> GetCoverArtBase64(string url)
+        {
+            if (!string.IsNullOrEmpty(url))
+            {
+                byte[]? imageBytes = await HttpClient.GetByteArrayAsync(url);
+
+                if (imageBytes.Length > 0)
+                {
+                    return "data:image/png;base64, " + Convert.ToBase64String(imageBytes);
+                }
+            }
+            return default;
         }
 
         private async Task<List<SeasonModel>> GetSeasonsAsync(string seriesPath, int seasonCount, StreamingPortal streamingPortal)

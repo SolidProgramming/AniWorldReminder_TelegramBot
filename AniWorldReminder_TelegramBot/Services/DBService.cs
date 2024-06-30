@@ -269,7 +269,7 @@ namespace AniWorldReminder_TelegramBot.Services
             using MySqlConnection connection = new(DBConnectionString);
 
             string query = "UPDATE series " +
-                            "SET series.SeasonCount = @SeasonCount, series.EpisodeCount = @EpisodeCount,  series.CoverArtBase64 = @CoverArtBase64 " +
+                            "SET series.SeasonCount = @SeasonCount, series.EpisodeCount = @EpisodeCount " +
                             "WHERE series.id = @id ";
 
             Dictionary<string, object> dictionary = new()
@@ -277,7 +277,6 @@ namespace AniWorldReminder_TelegramBot.Services
                 { "@id", seriesId },
                 { "@SeasonCount", seriesInfo.SeasonCount },
                 { "@EpisodeCount", seriesInfo.Seasons.Last().EpisodeCount },
-                { "@CoverArtBase64", seriesInfo.CoverArtBase64 },
             };
 
             DynamicParameters parameters = new(dictionary);

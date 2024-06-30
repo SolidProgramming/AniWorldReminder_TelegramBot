@@ -6,18 +6,6 @@ namespace AniWorldReminder_TelegramBot.Misc
     {
         private static readonly Dictionary<string, ChatCommand> ChatCommands = new()
         {
-            {
-                "remind",
-                ChatCommand.Remind
-            },
-             {
-                "remremind",
-                ChatCommand.RemRemind
-            },
-             {
-                "reminders",
-                ChatCommand.Reminders
-            },
              {
                 "verify",
                 ChatCommand.Verify
@@ -34,7 +22,7 @@ namespace AniWorldReminder_TelegramBot.Misc
 
         public static List<string> GetCommandNames()
         {
-            return System.Enum.GetNames(typeof(ChatCommand)).ToList();
+            return System.Enum.GetNames(typeof(ChatCommand)).Where(_ => !_.Equals(ChatCommand.Undefined.ToString())).ToList();
         }
 
         public static ChatCommand ToChatCommand(this string textcommand)

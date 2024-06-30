@@ -98,15 +98,6 @@ namespace AniWorldReminder_TelegramBot.Services
 
                 switch (chatCommand)
                 {
-                    case ChatCommand.Remind:
-                        await HandleRemind(message, parameter);
-                        break;
-                    case ChatCommand.RemRemind:
-                        await HandleRemindRemove(message, parameter);
-                        break;
-                    case ChatCommand.Reminders:
-                        await HandleReminders(message);
-                        break;
                     case ChatCommand.Verify:
                         await HandleVerify(message);
                         break;
@@ -139,7 +130,7 @@ namespace AniWorldReminder_TelegramBot.Services
             StringBuilder sb = new();
 
             sb.AppendLine("Eingegebenes Command wurde nicht erkannt.\n");
-            sb.AppendLine($"{Emoji.Exclamationmark} <b>/[COMMAND]{UnicodeChars.OpenBox.As<char>()}[PARAMETER]</b> {Emoji.Exclamationmark}\n");
+            sb.AppendLine($"{Emoji.Exclamationmark} <b>/[COMMAND]\n");
             sb.AppendLine("Folgende Commands sind verfügbar:\n");
 
             foreach (string commandName in commandNames)
@@ -159,144 +150,6 @@ namespace AniWorldReminder_TelegramBot.Services
                 return;
 
             await SendMessageAsync(message.Chat.Id, "Dieses Command wird nicht mehr unterstützt. Bitte verwende die Webseite zum hinzufügen von Remindern.");
-
-            return;
-
-            #region old reminder code
-            //await SendChatAction(message.Chat.Id, ChatAction.Typing);
-
-            //string telegramChatId = message.Chat.Id.ToString();
-
-            //UsersModel? user = await dbService.GetUserAsync(telegramChatId);
-
-            //if (user is null)
-            //    await dbService.InsertUserAsync(telegramChatId);
-
-            //bool useStrictSearch = false;
-
-            //if (userState == UserState.KeyboardAnswer)
-            //    useStrictSearch = true;
-
-            //(bool successAniWorld, List<SearchResultModel>? searchResultsAniWorld) = await AniWorldService.GetSeriesAsync(seriesName, useStrictSearch);
-            //(bool successSTO, List<SearchResultModel>? searchResultsSTO) = await STOService.GetSeriesAsync(seriesName, useStrictSearch);
-
-            //if (( !successAniWorld && !successSTO ) || ( !searchResultsAniWorld.HasItems() && !searchResultsSTO.HasItems() ))
-            //{
-            //    await SendMessageAsync(message.Chat.Id, "Es wurden keine passenden Treffer gefunden.");
-            //    return;
-            //}
-
-            //StreamingPortal streamingPortal;
-
-            //if (successAniWorld)
-            //{
-            //    streamingPortal = StreamingPortal.AniWorld;
-            //}
-            //else if (successSTO)
-            //{
-            //    streamingPortal = StreamingPortal.STO;
-            //}
-            //else { return; }
-
-            //List<SearchResultModel> allSearchResults = [];
-
-            //if (searchResultsAniWorld.HasItems())
-            //    allSearchResults.AddRange(searchResultsAniWorld);
-
-            //if (searchResultsSTO.HasItems())
-            //    allSearchResults.AddRange(searchResultsSTO);
-
-            //allSearchResults = allSearchResults.DistinctBy(_ => _.Title).ToList();
-
-            //if (allSearchResults.Count > 1)
-            //{
-            //    await dbService.UpdateUserStateAsync(telegramChatId, UserState.KeyboardAnswer);
-            //    await SendSearchResult(message, allSearchResults);
-            //    return;
-            //}
-
-            //seriesName = allSearchResults[0].Title.StripHtmlTags().HtmlDecode();
-
-            //SeriesModel series = await dbService.GetSeriesAsync(seriesName);
-
-            //if (series is null)
-            //    await InsertSeries(seriesName, streamingPortal);
-
-            //UsersSeriesModel? usersSeries = await dbService.GetUsersSeriesAsync(telegramChatId, seriesName);
-
-            //string messageText;
-
-            //if (usersSeries is null)
-            //{
-            //    series = await dbService.GetSeriesAsync(seriesName);
-
-            //    if (series is null)
-            //    {
-            //        messageText = $"{Emoji.Crossmark} Beim abrufen der Serieninformationen ist ein Fehler aufgetreten.";
-            //        await SendMessageAsync(message.Chat.Id, messageText);
-            //        return;
-            //    }
-
-            //    usersSeries = new()
-            //    {
-            //        Users = user,
-            //        Series = series
-            //    };
-
-            //    await dbService.InsertUsersSeriesAsync(usersSeries);
-
-            //    messageText = $"{Emoji.Checkmark} Dein Reminder für <b>{seriesName}</b> wurde hinzugefügt.";
-
-            //    if (string.IsNullOrEmpty(series.CoverArtUrl))
-            //    {
-            //        await SendMessageAsync(Convert.ToInt64(telegramChatId), messageText);
-            //    }
-            //    else
-            //    {
-            //        await SendPhotoAsync(Convert.ToInt64(telegramChatId), series.CoverArtUrl, messageText);
-            //    }
-            //}
-            //else
-            //{
-            //    messageText = $"{Emoji.ExclamationmarkRed} Es existiert bereits ein Reminder für <b>{seriesName}</b> {Emoji.ExclamationmarkRed}";
-
-            //    await SendMessageAsync(message.Chat.Id, messageText);
-            //}
-
-            //await dbService.UpdateUserStateAsync(telegramChatId, UserState.Undefined);
-            #endregion old reminder code
-        }
-
-        private async Task InsertSeries(string seriesName, StreamingPortal streamingPortal)
-        {
-            IStreamingPortalService streamingPortalService;
-
-            switch (streamingPortal)
-            {
-                case StreamingPortal.STO:
-                    streamingPortalService = STOService;
-                    break;
-                case StreamingPortal.AniWorld:
-                    streamingPortalService = AniWorldService;
-                    break;
-                default:
-                    return;
-            }
-
-            SeriesInfoModel? seriesInfo = await streamingPortalService.GetSeriesInfoAsync(seriesName, streamingPortal);
-
-            if (seriesInfo is null)
-                return;
-
-            int seriesId = await dbService.InsertSeriesAsync(seriesInfo, streamingPortal);
-
-            if (seriesId == -1)
-                return;
-
-            foreach (SeasonModel season in seriesInfo.Seasons)
-            {
-                await dbService.InsertEpisodesAsync(seriesId, season.Episodes);
-            }
         }
 
         private async Task HandleRemindRemove(Message message, string? seriesName)

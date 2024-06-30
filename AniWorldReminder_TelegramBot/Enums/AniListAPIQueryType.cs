@@ -1,8 +1,7 @@
 ﻿namespace AniWorldReminder_TelegramBot.Enums
 {
-    public enum ChatCommand
+    public enum AniListAPIQueryType
     {
-        Undefined,
-        Verify
+        SearchMedia
     }
 }
