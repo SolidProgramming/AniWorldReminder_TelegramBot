@@ -130,7 +130,7 @@ namespace AniWorldReminder_TelegramBot.Services
             StringBuilder sb = new();
 
             sb.AppendLine("Eingegebenes Command wurde nicht erkannt.\n");
-            sb.AppendLine($"{Emoji.Exclamationmark} <b>/[COMMAND]\n");
+            sb.AppendLine($"{Emoji.Exclamationmark} <b>/[COMMAND]</b>\n");
             sb.AppendLine("Folgende Commands sind verfügbar:\n");
 
             foreach (string commandName in commandNames)
