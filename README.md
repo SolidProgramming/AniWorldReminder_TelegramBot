@@ -86,7 +86,7 @@ private static IStreamingPortalService CreateService(StreamingPortal streamingPo
             ILogger<AniWorldSTOService> loggerAniWorld = sp.GetRequiredService<ILogger<AniWorldSTOService>>();
             return new AniWorldSTOService(loggerAniWorld, httpClientFactory, "https://aniworld.to", "AniWorld");
         case StreamingPortal.MyNewHoster:
-           ILogger<AniWorldSTOService> loggerMyNewHoster = sp.GetRequiredService<ILogger<MyNewHosterService>>(); //Add Logger
+           ILogger<MyNewHosterService> loggerMyNewHoster = sp.GetRequiredService<ILogger<MyNewHosterService>>(); //Add Logger
            return new MyNewHosterService(loggerMyNewHoster, httpClientFactory, "https://mynewhoster.to", "MyNewHoster"); //Here
         default:
             throw new NotImplementedException();
