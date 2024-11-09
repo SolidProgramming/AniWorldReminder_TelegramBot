@@ -333,9 +333,16 @@ namespace AniWorldReminder_TelegramBot.Classes
                     continue;
 
                 IEnumerable<Language>? flagsNewEp = episode.LanguageFlag.GetFlags<Language>(ignore: Language.None);
+
+                if (!flagsNewEp.Any())
+                    continue;
+
                 IEnumerable<Language>? flagsReminder = epNeedUpdate.LanguageFlag.GetFlags<Language>(ignore: Language.None);
 
                 IEnumerable<Language>? wantedLanguages = flagsNewEp.Except(flagsReminder);
+
+                if (!wantedLanguages.Any())
+                    continue;
 
                 epNeedUpdate.UpdatedLanguageFlags = wantedLanguages;
                 epNeedUpdate.LanguageFlag = episode.LanguageFlag;                
