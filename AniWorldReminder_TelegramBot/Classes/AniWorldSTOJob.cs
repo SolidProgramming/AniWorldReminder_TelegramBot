@@ -1,12 +1,11 @@
 ﻿using Quartz;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 
 namespace AniWorldReminder_TelegramBot.Classes
 {
     [DisallowConcurrentExecution]
-    public class AniWorldSTOJob(ILogger<AniWorldSTOJob> logger, 
+    public class AniWorldSTOJob(ILogger<AniWorldSTOJob> logger,
         IStreamingPortalServiceFactory streamingPortalServiceFactory,
         IDBService dbService,
         ITelegramBotService telegramBotService) : IJob
@@ -45,7 +44,7 @@ namespace AniWorldReminder_TelegramBot.Classes
                     continue;
 
                 logger.LogInformation($"{DateTime.Now} | Scanning for changes: {seriesReminder.Series.Name}");
-                               
+
                 (bool updateAvailable, SeriesInfoModel? seriesInfo, List<EpisodeModel>? languageUpdateEpisodes, List<EpisodeModel>? newEpisodes, List<EpisodeModel>? namesUpdatedEpisodes) = await UpdateNeeded(seriesReminder);
 
                 if (!updateAvailable || seriesInfo is null)
@@ -66,7 +65,7 @@ namespace AniWorldReminder_TelegramBot.Classes
                     await dbService.UpdateEpisodesAsync(seriesReminder.Series.Id, languageUpdateEpisodes);
 
                     foreach (EpisodeModel newEpisode in languageUpdateEpisodes)
-                    {                       
+                    {
                         IEnumerable<Language>? flagsReminder = seriesReminder.Language.GetFlags<Language>(ignore: Language.None);
 
                         if (newEpisode.UpdatedLanguageFlags.Any(_ => flagsReminder.Contains(_)))
@@ -118,7 +117,7 @@ namespace AniWorldReminder_TelegramBot.Classes
                     {
                         await dbService.InsertDownloadAsync(reminder.Series.Id, reminder.User.Id, matchingEpisodes);
                     }
-                    
+
                     await telegramBotService.SendMessageAsync(long.Parse(telegramBotSettings.AdminChat), "Die Folgen wurden in die Download-Datenbank eingetragen.");
 
                     await SendAdminDownloadNotification(group, matchingEpisodes);
@@ -127,7 +126,7 @@ namespace AniWorldReminder_TelegramBot.Classes
             }
         }
 
-        
+
 
         private async Task SendNotifications(SeriesInfoModel seriesInfo, IGrouping<int, SeriesReminderModel> seriesGroup, List<EpisodeModel> newEpisodes)
         {
@@ -345,7 +344,7 @@ namespace AniWorldReminder_TelegramBot.Classes
                     continue;
 
                 epNeedUpdate.UpdatedLanguageFlags = wantedLanguages;
-                epNeedUpdate.LanguageFlag = episode.LanguageFlag;                
+                epNeedUpdate.LanguageFlag = episode.LanguageFlag;
 
                 updateEpisodes.Add(epNeedUpdate);
             }
