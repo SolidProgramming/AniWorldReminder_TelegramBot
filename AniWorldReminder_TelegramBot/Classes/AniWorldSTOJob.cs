@@ -13,13 +13,29 @@ namespace AniWorldReminder_TelegramBot.Classes
         private readonly IStreamingPortalService AniWorldService = streamingPortalServiceFactory.GetService(StreamingPortal.AniWorld);
         private readonly IStreamingPortalService STOService = streamingPortalServiceFactory.GetService(StreamingPortal.STO);
 
+        private TelegramBotSettingsModel? BotSettings = new();
+
         [Time]
         public async Task Execute(IJobExecutionContext context)
         {
             MethodBase? methodBase = typeof(AniWorldSTOJob).GetMethod(nameof(Execute));
             MethodTimeLogger.LogExecution(methodBase);
 
-            await CheckForNewEpisodes();
+            BotSettings = SettingsHelper.ReadSettings<TelegramBotSettingsModel>();
+
+            if (BotSettings is null || string.IsNullOrEmpty(BotSettings.AdminChat))
+                return;
+
+            try
+            {
+                await CheckForNewEpisodes();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.ToString());
+                await telegramBotService.SendMessageAsync(Convert.ToInt64(BotSettings.AdminChat), $"Error: {ex}");
+            }
+
         }
 
         private async Task CheckForNewEpisodes()
@@ -30,9 +46,6 @@ namespace AniWorldReminder_TelegramBot.Classes
 
             if (userReminderSeries is null)
                 return;
-
-
-            TelegramBotSettingsModel? telegramBotSettings = SettingsHelper.ReadSettings<TelegramBotSettingsModel>();
 
             IEnumerable<IGrouping<int, SeriesReminderModel>>? userReminderSeriesGroups = userReminderSeries.GroupBy(_ => _.Series!.Id);
 
@@ -118,15 +131,13 @@ namespace AniWorldReminder_TelegramBot.Classes
                         await dbService.InsertDownloadAsync(reminder.Series.Id, reminder.User.Id, matchingEpisodes);
                     }
 
-                    await telegramBotService.SendMessageAsync(long.Parse(telegramBotSettings.AdminChat), "Die Folgen wurden in die Download-Datenbank eingetragen.");
+                    await telegramBotService.SendMessageAsync(long.Parse(BotSettings.AdminChat), "Die Folgen wurden in die Download-Datenbank eingetragen.");
 
-                    await SendAdminDownloadNotification(group, matchingEpisodes);
+                    //await SendAdminDownloadNotification(group, matchingEpisodes);
 
                 }
             }
         }
-
-
 
         private async Task SendNotifications(SeriesInfoModel seriesInfo, IGrouping<int, SeriesReminderModel> seriesGroup, List<EpisodeModel> newEpisodes)
         {
@@ -142,7 +153,7 @@ namespace AniWorldReminder_TelegramBot.Classes
             sb.AppendLine($"{Emoji.Confetti} Neue Folge(n) für <b>{seriesName}</b> sind erschienen! {Emoji.Confetti}\n\n");
             sb.AppendLine($"{Emoji.Wave} Staffel: <b>{seriesInfo.SeasonCount}</b> Episode: <b>{seriesInfo.Seasons.Last().EpisodeCount}</b> {Emoji.Wave}\n");
 
-            foreach (EpisodeModel newEpisode in newEpisodes.TakeLast(maxCount))
+            foreach (EpisodeModel newEpisode in newEpisodes.Take(maxCount))
             {
 
                 sb.AppendLine($"{Emoji.SmallBlackSquare} S<b>{newEpisode.Season:D2}</b> E<b>{newEpisode.Episode:D2}</b> {Emoji.HeavyMinus} {newEpisode.Name} [{newEpisode.LanguageFlag.ToLanguageText()}]");
@@ -151,6 +162,7 @@ namespace AniWorldReminder_TelegramBot.Classes
             if (newEpisodes.Count > maxCount)
             {
                 sb.AppendLine($"{Emoji.SmallBlackSquare} <b>...</b>");
+                sb.AppendLine($"+{newEpisodes.Count - maxCount}");
             }
 
             foreach (SeriesReminderModel? seriesReminder in seriesGroup)
@@ -219,11 +231,6 @@ namespace AniWorldReminder_TelegramBot.Classes
 
         private async Task SendAdminNotification(List<EpisodeModel> episodes, string messageText)
         {
-            TelegramBotSettingsModel? botSettings = SettingsHelper.ReadSettings<TelegramBotSettingsModel>();
-
-            if (botSettings is null || string.IsNullOrEmpty(botSettings.AdminChat) || string.IsNullOrEmpty(messageText))
-                return;
-
             StringBuilder sb = new();
 
             sb.AppendLine($"Neue Admin Meldung:\n\n");
@@ -237,9 +244,9 @@ namespace AniWorldReminder_TelegramBot.Classes
 
             string fullMessageText = sb.ToString();
 
-            await telegramBotService.SendMessageAsync(Convert.ToInt64(botSettings.AdminChat), fullMessageText, silentMessage: true);
+            await telegramBotService.SendMessageAsync(Convert.ToInt64(BotSettings.AdminChat), fullMessageText, silentMessage: true);
 
-            logger.LogInformation($"{DateTime.Now} | Sent Admin notification to chat: {botSettings.AdminChat}");
+            logger.LogInformation($"{DateTime.Now} | Sent Admin notification to chat: {BotSettings.AdminChat}");
         }
 
         private async Task<(bool updateAvailable, SeriesInfoModel? seriesInfo, List<EpisodeModel>? updateEpisodes, List<EpisodeModel>? newEpisodes, List<EpisodeModel>? namesUpdatedEpisodes)> UpdateNeeded(SeriesReminderModel seriesReminder)
@@ -326,6 +333,7 @@ namespace AniWorldReminder_TelegramBot.Classes
 
             foreach (EpisodeModel episode in seriesInfo.Seasons.SelectMany(_ => _.Episodes))
             {
+
                 EpisodeModel? epNeedUpdate = dbEpisodes.SingleOrDefault(_ => ( _.Season == episode.Season && _.Episode == episode.Episode ) && _.LanguageFlag != episode.LanguageFlag);
 
                 if (epNeedUpdate is null)
@@ -347,6 +355,7 @@ namespace AniWorldReminder_TelegramBot.Classes
                 epNeedUpdate.LanguageFlag = episode.LanguageFlag;
 
                 updateEpisodes.Add(epNeedUpdate);
+
             }
 
             return updateEpisodes;
